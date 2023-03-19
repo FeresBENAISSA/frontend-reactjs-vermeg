@@ -9,7 +9,6 @@ import { Box, Link } from '@mui/material';
 
 const Logo = forwardRef(({ disabledLink = false, sx, ...other }, ref) => {
   const theme = useTheme();
-  const image = require("../../assets/images/vermegIcon.png")
   const PRIMARY_LIGHT = theme.palette.primary.light;
 
   const PRIMARY_MAIN = theme.palette.primary.main;
@@ -21,7 +20,7 @@ const Logo = forwardRef(({ disabledLink = false, sx, ...other }, ref) => {
   const logo = (
     <Box
       component="img"
-      src={image} 
+      src={""} 
       sx={{ width: 40, height: 40, cursor: 'pointer', ...sx }}
     />
   );

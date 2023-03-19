@@ -15,11 +15,11 @@ import NavSection from '../../../components/nav-section';
 //
 // import navConfig from './configManager';
 import { useSelector } from 'react-redux';
-import { selectCurrentRoles, selectCurrentUsername } from '../../../redux/features/auth/authSlice';
+import { selectCurrentRoles, selectCurrentEmail, selectCurrentUser } from '../../../redux/features/auth/authSlice';
 import navConfigAdmin from './configAdmin';
 import navConfigManager from './configManager';
 import navConfigBank from './configBank';
-
+import * as Constants from "../../../Constants/constants"
 // ----------------------------------------------------------------------
 
 const NAV_WIDTH = 280;
@@ -42,7 +42,8 @@ Nav.propTypes = {
 export default function Nav({ openNav, onCloseNav }) {
   const { pathname } = useLocation();
   const roles = useSelector(selectCurrentRoles);
-  const username =useSelector(selectCurrentUsername)
+  const email =useSelector(selectCurrentEmail)
+  const user = useSelector(selectCurrentUser)
   const isDesktop = useResponsive('up', 'lg');
   const [navConfiguration,setNavConfiguration] = useState();
  
@@ -87,15 +88,15 @@ useEffect(()=>{
       <Box sx={{ mb: 5, mx: 2.5 }}>
         <Link underline="none">
           <StyledAccount>
-            <Avatar src={account.photoURL} alt="photoURL" />
-
+            {/* <Avatar src={account.photoURL} alt="photoURL" /> */}
+            <Avatar src={user.avatar?Constants.BASE_URL+user.avatar.split('\\')[1]:"avatar"} alt="photoURL" />
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-              {username}
+              {email}
               </Typography>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {account.role}
+                {roles}
               </Typography>
             </Box>
           </StyledAccount>

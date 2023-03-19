@@ -9,15 +9,17 @@ import PRODUCTS from '../../_mock/products';
 import AccountProfile from '../../sections/@dashboard/account/AccountProfile';
 import { AccountProfileDetails } from '../../sections/@dashboard/account/AccountProfileDetails';
 import { useSelector } from 'react-redux';
-import { selectCurrentUsername } from '../../redux/features/auth/authSlice';
+import { selectCurrentEmail, selectCurrentUser } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
 
 // ----------------------------------------------------------------------
 
 export default function ManagerProfile() {
   const [openFilter, setOpenFilter] = useState(false);
-  const username = useSelector(selectCurrentUsername);
-  const [user, setUser] = useState();
+  const email = useSelector(selectCurrentEmail);
+  // const baseuser = useSelector(selectCurrentUser);
+  const userExist = useSelector(selectCurrentUser)
+  const [user, setUser] = useState(userExist);
   const api = useAxios();
   const handleOpenFilter = () => {
     setOpenFilter(true);
@@ -27,17 +29,17 @@ export default function ManagerProfile() {
     setOpenFilter(false);
   };
 
-  const getUser = async () => {
-    const response = await api.get(`/users/${username}`);
-    console.log(response.data);
-    setUser(response.data);
+  const getUserByEmail = async (email) => {
+    const response = await api.get(`/api/users/${email}`);
+    console.log(response);
+    setUser(response.data.user);
   };
+  useEffect(()=>{
+    getUserByEmail(email);
+  },[])
 
-  useEffect(() => {
-   getUser();
-  }, []);
 
-  if (user)
+  // if (user)
     return (
       <>
         <Helmet>
@@ -83,5 +85,5 @@ export default function ManagerProfile() {
         </Container>
       </>
     );
-  else <></>;
+  // else <></>;
 }

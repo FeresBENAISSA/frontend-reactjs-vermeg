@@ -36,7 +36,7 @@ const AccountProfile = (props) => {
 
   useEffect(() => {
     if(user.avatar)
-    setAvatar('http://localhost:3001/' + user.avatar.split('\\')[1]);
+    setAvatar('http://localhost:5001/' + user.avatar.split('\\')[1]);
   }, [user]);
   const handleButtonClick = () => {
     ImageInput.current.click();
@@ -56,7 +56,7 @@ const AccountProfile = (props) => {
     formData.append('image', selectedImage);
     console.log(formData);
     try {
-      const response = await api.post('/users/upload', formData);
+      const response = await api.post('api/users/upload', formData);
       console.log(response.data);
       if (response.status == 201) alert('file uploaded succcesfuly');
       // handle successful response here

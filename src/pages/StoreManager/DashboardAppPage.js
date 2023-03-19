@@ -20,20 +20,19 @@ import {
 // import BasicDetailPanels from 'src/components/data-table/dataTable';
 // import Example from './../../components/data-table/dataTablev2';
 import { useSelector } from 'react-redux';
-import { selectCurrentUsername, selectCurrentToken } from '../../redux/features/auth/authSlice';
+import { selectCurrentToken, selectCurrentEmail, selectCurrentUser } from '../../redux/features/auth/authSlice';
 // import useAxios from '../../api/axios';
 import { useEffect } from 'react';
 import { responsiveFontSizes } from '../../theme/typography';
-import { getProducts } from '../../api/productService';
 import useAxios from '../../api/axios';
 
 // ----------------------------------------------------------------------
 
 export default function DashboardAppPage() {
   const theme = useTheme();
-  const user = useSelector(selectCurrentUsername);
+  const user = useSelector(selectCurrentUser);
   const token = useSelector(selectCurrentToken);
-  const welcome = user ? `welcome${user}` : ' Hi, Welcome back';
+  const welcome = user.firstname ? `welcome ${user.firstname}` : ' Hi, Welcome back';
 
 
   return (

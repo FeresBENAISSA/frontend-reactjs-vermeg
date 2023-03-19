@@ -4,7 +4,7 @@ import { Navigate, useRoutes } from 'react-router-dom';
 import SimpleLayout from './layouts/simple';
 //
 // import BlogPage from './pages/StoreManager/BlogPage';
-import UserPage from './pages/StoreManager/UserPage';
+import UserPage from './pages/Adminstrator/UserPage';
 import ProductPage from './pages/StoreManager/ProductPage';
 
 import LoginPage from './pages/LoginPage';

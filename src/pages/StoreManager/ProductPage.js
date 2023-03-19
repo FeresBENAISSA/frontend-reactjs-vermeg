@@ -37,7 +37,7 @@ import axios from '../../api/axios';
 import { Axios } from 'axios';
 import {  useGetProductsQuery } from '../../redux/features/product/productApiSlice';
 import Example from '../../components/data-table/dataTablev2';
-import ProductDataTable from '../../components/data-table/ProductDataTable copy';
+import ProductDataTable from '../../components/data-table/ProductDataTable';
 
 // ----------------------------------------------------------------------
 

@@ -43,12 +43,9 @@ import {
 import { createProduct, fetchProducts } from '../../redux/features/product/productAPI';
 import { setDate } from 'date-fns';
 import useAxios from '../../api/axios';
-
+import { PRODUCTS_URL } from './../../Constants/constants';
 const productImage = require('./avatar_1.jpg');
-const PRODUCT_URL = '/products';
 
-// const token =
-//   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImZpZml4ZCIsInJvbGVzIjpbIkFETUlOIiwiU1RPUkVfTUFOQUdFUiJdLCJpYXQiOjE2Nzg2MzYyMjIsImV4cCI6MTY3ODcyMjYyMn0.XE5fqcFFbQ5khN1vwykRxb-U8k8fEMmF8Gltk5EyJ2w';
 const ProductDataTable = () => {
   // const { data: products, isLoading, isSuccess, isError, error } = useGetProductsQuery();
   // const [deleteProduct] = useDeleteProductMutation();
@@ -59,12 +56,11 @@ const ProductDataTable = () => {
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
-  const fetchProducts = async () => {
+
+  const getProducts = async () => {
     try {
-      const response = await api.get(PRODUCT_URL);
-      //   {
-      //   headers: { Authorization: `Bearer ${token}`, roles: ['ADMIN', 'STORE_MANAGER'] },
-      // });
+      const response = await api.get(PRODUCTS_URL);
+
       if (!response?.data) throw Error('no data found');
       const products = response.data;
       console.log(products);
@@ -73,9 +69,11 @@ const ProductDataTable = () => {
       console.log(error);
     }
   };
-
+  const deleteProduct = async (id) => {
+    await api.delete(`${PRODUCTS_URL}/${id}`);
+  };
   useEffect(() => {
-    fetchProducts();
+    getProducts();
   }, []);
 
   useEffect(() => {
@@ -83,7 +81,7 @@ const ProductDataTable = () => {
   }, [data]);
 
   const handleCreateNewRow = async (values) => {
-    api.post(PRODUCT_URL, values).then(() => {
+    api.post(PRODUCTS_URL, values).then(() => {
       tableData.push(values);
       setTableData([...tableData]);
     });
@@ -95,7 +93,7 @@ const ProductDataTable = () => {
       console.log(values);
       tableData[row.index] = values;
       //send/receive api updates here, then refetch or update local table data for re-render
-      const response = await api.put(PRODUCT_URL, tableData[row.index]);
+      const response = await api.put(PRODUCTS_URL, tableData[row.index]);
       // {
       //   headers: { Authorization: `Bearer ${token}`, roles: ['ADMIN', 'STORE_MANAGER'] },
       // });
@@ -110,13 +108,7 @@ const ProductDataTable = () => {
   const handleCancelRowEdits = () => {
     setValidationErrors({});
   };
-  const deleteProduct = async (id) => {
-    await api.delete(`${PRODUCT_URL}/${id}`);
-
-    //   {
-    //     headers: { Authorization: `Bearer ${token}`, roles: ['ADMIN', 'STORE_MANAGER'] },
-    //   });
-  };
+  
 
   const handleDeleteRow = useCallback(
     (row) => {
@@ -481,7 +473,7 @@ const ProductDataTable = () => {
   // else return <p>{error}</p>;
 };
 export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
-  const [addProduct] = useAddProductMutation();
+  // const [addProduct] = useAddProductMutation();
 
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
@@ -494,11 +486,11 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     //put your validation logic here
     console.log(values);
     // createProduct(values,token);
-    try {
-      const response = await addProduct(values).unwrap();
-    } catch (err) {
-      console.log(err);
-    }
+    // try {
+    //   const response = await addProduct(values).unwrap();
+    // } catch (err) {
+    //   console.log(err);
+    // }
     onSubmit(values);
     onClose();
     //  window.location.reload(true);

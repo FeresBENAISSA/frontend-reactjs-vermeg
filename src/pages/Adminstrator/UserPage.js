@@ -33,6 +33,7 @@ import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
 // mock
 import USERLIST from '../../_mock/user';
 import Example from '../../components/data-table/dataTablev2';
+import UserDataTable from '../../components/data-table/UserDataTable';
 
 // ----------------------------------------------------------------------
 
@@ -166,7 +167,7 @@ export default function UserPage() {
 
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            User sss
           </Typography>
           <Button  variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
             New User
@@ -175,7 +176,8 @@ export default function UserPage() {
         </Stack>
 
         <Card>
-          <Example/>
+          {/* <Example/> */}
+          <UserDataTable/>
         </Card>
       </Container>
 

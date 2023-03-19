@@ -19,11 +19,11 @@ const LOGIN_URL = '/auth';
 export default function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const usernameRef = useRef();
+  const emailRef = useRef();
   const errRef = useRef();
   const from = location.state?.from?.pathname || '/';
 
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errMsg, setErrMsg] = useState('');
 
@@ -33,25 +33,25 @@ export default function LoginForm() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    usernameRef.current.focus();
+    emailRef.current.focus();
   });
   useEffect(() => {
     setErrMsg('');
-  }, [username, password]);
+  }, [email, password]);
 
   const handleClick = async () => {
-    const userData = await login({ username, password }).unwrap();
+    const userData = await login({ email, password }).unwrap();
     console.log(userData);
     // console.log(response)c
     const roles = userData.roles;
     try {
-      console.log(username, password);
+      console.log(email, password);
       // const accessToken = response?.data.accessToken;
       // const roles = response?.data.roles;
       // console.log(response)
-      // setAuth({ username, password, roles, accessToken });
-      dispatch(setCredentials({ ...userData, username }));
-      setUsername('');
+      // setAuth({ email, password, roles, accessToken });
+      dispatch(setCredentials({ ...userData, email }));
+      setEmail('');
       setPassword('');
   
       if (roles.includes('BANK_AGENT')) {
@@ -70,7 +70,7 @@ export default function LoginForm() {
       if (!error.response) {
         setErrMsg('No server Response');
       } else if (error.response?.status === 400) {
-        setErrMsg('Missing username or password ');
+        setErrMsg('Missing Email or password ');
       } else if (error.response?.status === 401) setErrMsg('Unauthorized');
       else {
         setErrMsg('Login Failed ');
@@ -84,12 +84,12 @@ export default function LoginForm() {
     <>
       <Stack spacing={3}>
         <TextField
-          name="username"
-          label="username"
-          ref={usernameRef}
+          name="email"
+          label="email"
+          ref={emailRef}
           autoComplete="off"
-          onChange={(e) => setUsername(e.target.value)}
-          value={username}
+          onChange={(e) => setEmail(e.target.value)}
+          value={email}
           required
         />
 

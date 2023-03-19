@@ -20,15 +20,15 @@ import {
 // import BasicDetailPanels from 'src/components/data-table/dataTable';
 // import Example from './../../components/data-table/dataTablev2';
 import { useSelector } from 'react-redux';
-import { selectCurrentUsername, selectCurrentToken } from '../../redux/features/auth/authSlice';
+import { selectCurrentEmail, selectCurrentToken } from '../../redux/features/auth/authSlice';
 
 // ----------------------------------------------------------------------
 
 export default function BankDashboardAppPage() {
   const theme = useTheme();
-  const user = useSelector(selectCurrentUsername);
+  const email = useSelector(selectCurrentEmail);
   const token = useSelector(selectCurrentToken);
-  const welcome = user ? `welcome${user}` : ' Hi, Welcome back';
+  const welcome = email ? `welcome${email}` : ' Hi, Welcome back';
   return (
     <>
       <Helmet>

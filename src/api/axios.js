@@ -1,18 +1,20 @@
+import { Select } from '@mui/material';
 import axios from 'axios';
 import dayjs  from 'dayjs';
 import jwt_decode  from 'jwt-decode';
 import { defaultThemes } from 'react-data-table-component';
 import { useDispatch, useSelector } from 'react-redux';
-import { logOut, selectCurrentToken, selectCurrentUsername, setCredentials } from '../redux/features/auth/authSlice';
+import { logOut,selectCurrentUsername, selectCurrentEmail,selectCurrentUser ,selectCurrentToken, setCredentials } from '../redux/features/auth/authSlice';
 
-const baseUrl = 'http://localhost:3001';
+const baseUrl = 'http://localhost:5001';
 axios.defaults.withCredentials = true
 
 const useAxios = () => {
   const token = useSelector(selectCurrentToken);
-  const username = useSelector(selectCurrentUsername)
+  const email = useSelector(selectCurrentEmail)
+  const user = useSelector(selectCurrentUser);
+  const username = useSelector(selectCurrentUsername);
   const dispatch=useDispatch();
-
   // console.log(token);
   const axiosInstance = axios.create({
     baseURL: baseUrl,
@@ -27,11 +29,11 @@ const useAxios = () => {
     const isExpired = dayjs.unix(payload.exp).diff(dayjs()) < 1;
     if (!isExpired) return req;
     console.log("refreshing token ")
-    const response = await axios.get(`${baseUrl}/refresh`);
-    console.log(response)
+    const response = await axios.get(`${baseUrl}/api/auth/getNewToken`);
 
     if(response?.data){
-      dispatch(setCredentials({ ...response.data, username }));
+      const accessToken= response.data.accessToken;
+      dispatch(setCredentials({ email,accessToken,user  } ));
       req.headers.Authorization=`Bearer ${response.data.accessToken}`;
     }
     return req;

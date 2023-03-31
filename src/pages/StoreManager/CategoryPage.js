@@ -7,21 +7,21 @@ import Modal from '@mui/material/Modal/';
 // @mui
 import { Card, Stack, Container, Typography } from '@mui/material';
 // components
-import ProductDataTable from '../../components/data-table/ProductDataTable';
+import CategoryDataTable from '../../components/data-table/CategoryDataTable';
 
 // ----------------------------------------------------------------------
 
-export default function UserPage() {
+export default function CategoryPage() {
   return (
     <>
       <Helmet>
-        <title> Products</title>
+        <title> Category</title>
       </Helmet>
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Product
+          Category
             {/* {
         products.map((product)=><p>{product.productLabel}</p>)
       } */}
@@ -32,7 +32,7 @@ export default function UserPage() {
         </Stack>
 
         <Card>
-          <ProductDataTable />
+          <CategoryDataTable/>
         </Card>
       </Container>
     </>

@@ -27,14 +27,15 @@ import {
 
 import { ExportToCsv } from 'export-to-csv';
 // import API
-import { selectCurrentToken } from '../../redux/features/auth/authSlice';
+import { selectCurrentToken, selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { useSelector } from 'react-redux';
 import useAxios from '../../api/axios';
-import { ADMIN, AVAILABLE_STORES_URL, BANK_AGENT, BASE_URL, STORE_MANAGER, USERS_URL } from '../../Constants';
+import { ADMIN, AVAILABLE_STORES_URL, BANK_AGENT, BASE_URL, STORE_EMPLOYEE, STORE_MANAGER, USERS_URL } from '../../Constants';
 const userImage = require('./avatar_1.jpg');
 
 const UserDataTable = () => {
   const token = useSelector(selectCurrentToken);
+  const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
@@ -43,8 +44,8 @@ const UserDataTable = () => {
 
   const getUsers = async () => {
     try {
-      const response = await api.get(USERS_URL);
-      if (!response?.data) throw Error('no data found');
+      const response = await api.get(`${USERS_URL}/store/${user.store}`);
+            if (!response?.data) throw Error('no data found');
       const users = response.data;
       console.log(users);
       setData(users);
@@ -72,12 +73,14 @@ const UserDataTable = () => {
   }, [data]);
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    console.log(values)
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    formData.append("storeId",user.store)
     console.log(formData);
     await createUser(formData);
     getUsers();
+
   };
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
@@ -220,7 +223,7 @@ const UserDataTable = () => {
         accessorKey: 'email', //simple recommended way to define a column
         header: 'Email',
       },
-
+  
       {
         accessorKey: 'roles', //simple recommended way to define a column
         header: 'Roles',
@@ -277,7 +280,7 @@ const UserDataTable = () => {
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h4">Signature Catch Phrase: </Typography>
             <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
-            <img src="./id.jpeg" />
+            <img src='./id.jpeg'/>
           </Box>
         </Box>
       )}
@@ -331,7 +334,7 @@ const UserDataTable = () => {
               onClick={handleDeleteAll}
               variant="contained"
             >
-              Delete selected
+              Delete
             </Button>
             <CreateNewUserModal
               columns={columns}
@@ -356,7 +359,9 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
   const handleButtonClick = () => {
     ImageInput.current.click();
   };
-  const getAvailableStores = async () => {};
+  const getAvailableStores = async()=>{
+
+  }
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'image/png') {
@@ -367,18 +372,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
       alert('Please select a valid PNG file');
     }
   };
-  useEffect(() => {
-    if (selectedOption === 'STORE_MANAGER') {
-      api
-        .get(AVAILABLE_STORES_URL)
-        .then((response) => {
-          setSubOptions(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
-  }, [selectedOption]);
+
 
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
@@ -391,10 +385,10 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     //put your validation logic here
     //change role string to table
-    const roles = [];
+    const roles =[];
     roles.push(values.roles);
-    values.roles = roles;
-    console.log(values);
+    values.roles=roles;
+    console.log(values)
     onSubmit(values);
     onClose();
   };
@@ -429,6 +423,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
               .filter((column) => {
                 if (column.accessorKey == '_id') return false;
                 else if (column.accessorKey == 'avatar') return false;
+
                 else if (column.id == 'createdAt') return false;
                 else if (column.id == 'roles') return false;
                 else if (column.id == 'name') return false;
@@ -454,36 +449,11 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
                   setSelectedOption(e.target.value);
                   setValues({ ...values, [e.target.name]: e.target.value });
                 }}
-              >
-                <MenuItem value={STORE_MANAGER}>Store Manager</MenuItem>
-                <MenuItem value={BANK_AGENT}>Bank agent</MenuItem>
-                <MenuItem value={ADMIN}>Admin </MenuItem>
+              > 
+              <MenuItem selected value={STORE_EMPLOYEE}>Store Employee </MenuItem>
+
               </Select>
             </FormControl>
-            {selectedOption === 'STORE_MANAGER' ? (
-              <FormControl fullWidth>
-                <InputLabel id="store">Store </InputLabel>
-                <Select
-                  labelId="store"
-                  id="store"
-                  name="storeId"
-                  label="store"
-                  onChange={(e) => {
-                    console.log(e.target);
-                    setValues({ ...values, [e.target.name]: e.target.value });
-                  }}
-                >
-                  {/* <MenuItem value={'FNAC'}>fnac</MenuItem>
-                  <MenuItem value={'DARTY'}>darty</MenuItem>
-                  <MenuItem value={'ADMIN'}>Admin </MenuItem> */}
-                  {subOptions.map((option) => (
-                    <MenuItem key={option.storeLabel} value={option._id}>
-                      {option.storeLabel}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            ) : null}
             <TextField
               label="password"
               name="password"

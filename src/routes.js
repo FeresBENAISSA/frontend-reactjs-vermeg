@@ -24,6 +24,11 @@ import BankDashboardLayout from './layouts/dashboard/BankDashboardLayout';
 import AdminProfile from './pages/Adminstrator/ProfileAdmin';
 import BankProfile from './pages/BankAgent/ProfileBank';
 import ManagerProfile from './pages/StoreManager/Profile';
+import StorePage from './pages/Adminstrator/StorePage';
+import StoreEmployeePage from './pages/StoreManager/StoreEmployeePage';
+import CompanyPage from './pages/Adminstrator/CompanyPage';
+import CategoryPage from './pages/StoreManager/CategoryPage';
+import BrandPage from './pages/StoreManager/BrandPage';
 
 // import RequireAuth from './components/RequireAuth';
 
@@ -47,6 +52,9 @@ export default function Router() {
             { element: <Navigate to="/dashboard/manager" />, index: true },
             { path: 'manager', element: <DashboardAppPage /> },
             { path: 'product', element: <ProductPage /> },
+            { path: 'categories', element: <CategoryPage /> },
+            { path: 'brands', element: <BrandPage /> },
+            { path: 'employee', element: <StoreEmployeePage /> },
             { path: 'profile', element: <ManagerProfile /> },
             // { path: 'blog', element: <BlogPage /> },
             // { path: 'products', element: <ProductsPage /> },
@@ -68,6 +76,8 @@ export default function Router() {
             { element: <Navigate to="/dashboard/admin" />, index: true },
             { path: 'admin', element: <AdminDashboardAppPage /> },
             { path: 'user', element: <UserPage /> },
+            { path: 'store', element: <StorePage /> },
+            { path: 'company', element: <CompanyPage /> },
             { path: 'adminProfile', element: <AdminProfile /> },
             // { path: 'bank', element: <BankDashboardAppPage /> },
             // { path: 'product', element: <ProductPage /> },

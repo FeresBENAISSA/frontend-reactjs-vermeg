@@ -1,25 +1,27 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
-
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 //MRT Imports
 import MaterialReactTable from 'material-react-table';
-import { Delete, Edit } from '@mui/icons-material';
+import { Delete, Edit, Add } from '@mui/icons-material';
 
 //Material-UI Imports
 import {
   Box,
   Button,
-  ListItemIcon,
   MenuItem,
   Typography,
   TextField,
   Tooltip,
   IconButton,
-  Alert,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  ImageList,
+  ImageListItem,
 } from '@mui/material';
 
 //Date Picker Imports
@@ -27,39 +29,26 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ExportToCsv } from 'export-to-csv';
-//Icons Imports
-import { AccountCircle, Send } from '@mui/icons-material';
 // import API
-import axios from '../../api/axios';
-
-import { selectCurrentToken } from '../../redux/features/auth/authSlice';
+import { selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { useSelector } from 'react-redux';
-import {
-  useGetProductsQuery,
-  useAddProductMutation,
-  useDeleteProductMutation,
-  useUpdateProductMutation,
-} from '../../redux/features/product/productApiSlice';
-import { createProduct, fetchProducts } from '../../redux/features/product/productAPI';
-import { setDate } from 'date-fns';
 import useAxios from '../../api/axios';
-import { PRODUCTS_URL } from './../../Constants/constants';
+import { BASE_URL, BRANDS_URL, CATEGORY_URL, PRODUCTS_URL } from './../../Constants/constants';
 const productImage = require('./avatar_1.jpg');
 
 const ProductDataTable = () => {
-  // const { data: products, isLoading, isSuccess, isError, error } = useGetProductsQuery();
-  // const [deleteProduct] = useDeleteProductMutation();
-  // const [updateProduct] = useUpdateProductMutation();
-  const token = useSelector(selectCurrentToken);
+  const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const ImageInput = useRef();
 
   const getProducts = async () => {
     try {
-      const response = await api.get(PRODUCTS_URL);
+      const response = await api.get(`${PRODUCTS_URL}/store/${user.store}`);
 
       if (!response?.data) throw Error('no data found');
       const products = response.data;
@@ -71,6 +60,15 @@ const ProductDataTable = () => {
   };
   const deleteProduct = async (id) => {
     await api.delete(`${PRODUCTS_URL}/${id}`);
+    await getProducts();
+    alert('deleted succefuly');
+  };
+  const updateProduct = async (value) => {
+    await api.put(PRODUCTS_URL, value);
+  };
+  const createProduct = async (values) => {
+    // console.log(values);
+    const response = await api.post(PRODUCTS_URL, values);
   };
   useEffect(() => {
     getProducts();
@@ -81,11 +79,25 @@ const ProductDataTable = () => {
   }, [data]);
 
   const handleCreateNewRow = async (values) => {
-    api.post(PRODUCTS_URL, values).then(() => {
-      tableData.push(values);
-      setTableData([...tableData]);
-    });
-    // createProduct(values, token);
+    console.log(values);
+    values.storeId = user.store;
+    const formData = new FormData();
+    Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    const files = values.productImages;
+    formData.delete('productImages');
+    formData.delete('brand.title');
+    formData.delete('');
+    formData.delete('category.title');
+    formData.delete('_id');
+    if (files) {
+      for (let i = 0; i < files.length; i++) {
+        formData.append('productImages', files[i]);
+      }
+    }
+
+    console.log(formData);
+    await createProduct(formData);
+    getProducts();
   };
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
@@ -94,11 +106,7 @@ const ProductDataTable = () => {
       tableData[row.index] = values;
       //send/receive api updates here, then refetch or update local table data for re-render
       const response = await api.put(PRODUCTS_URL, tableData[row.index]);
-      // {
-      //   headers: { Authorization: `Bearer ${token}`, roles: ['ADMIN', 'STORE_MANAGER'] },
-      // });
-      // await updateProduct(tableData[row.index]);
-
+      getProducts();
       setTableData([...tableData]);
       exitEditingMode(); //required to exit editing mode and close modal
       // window.location.reload(true);
@@ -108,26 +116,14 @@ const ProductDataTable = () => {
   const handleCancelRowEdits = () => {
     setValidationErrors({});
   };
-  
 
   const handleDeleteRow = useCallback(
     (row) => {
       if (!window.confirm(`Are you sure you want to delete ${row.getValue('productLabel')}`)) {
         return;
       }
-      // deleteProduct({ id: row.original._id })
-      //   .then((reponse) => {
-      //     console.log(reponse);
-      //     tableData.splice(row.index, 1);
-      //     setTableData([...tableData]);
-      //   })
-      //   .catch((err) => console.log(err));
-
-      //  console.log(result)
-      // deleteProduct(row.getValue('_id'))
       //send api delete request here, then refetch or update local table data for re-render
       deleteProduct(row.getValue('_id'));
-
       // window.location.reload(true);
     },
     [tableData]
@@ -172,30 +168,6 @@ const ProductDataTable = () => {
         header: 'Label',
       },
 
-      // {
-      //   accessorFn: (row) => `${row.productImage} `, //accessorFn used to join multiple data into a single cell
-      //   id: 'productImage', //id is still required when using accessorFn instead of accessorKey
-      //   header: 'Image',
-      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-      //     ...getCommonEditTextFieldProps(cell),
-      //   }),
-      //   size: 250,
-      //   enableClickToCopy: true,
-      //   Cell: ({ renderedCellValue, row }) => (
-      //     <Box
-      //       sx={{
-      //         display: 'flex',
-      //         alignItems: 'center',
-      //         gap: '1rem',
-      //       }}
-      //     >
-      //       <img alt="avatar" height={30} src={productImage} loading="lazy" style={{ borderRadius: '50%' }} />
-      //       {/* row.original.avatar */}
-      //       {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
-      //       <span>{renderedCellValue}</span>
-      //     </Box>
-      //   ),
-      // },
       {
         accessorKey: 'productDescription', //simple recommended way to define a column
         header: 'Description',
@@ -203,33 +175,6 @@ const ProductDataTable = () => {
       {
         accessorKey: 'productReference', //simple recommended way to define a column
         header: 'Reference',
-      },
-      {
-        accessorFn: (row) => `${row.productImage} `, //accessorFn used to join multiple data into a single cell
-        id: 'productImage', //id is still required when using accessorFn instead of accessorKey
-        header: 'Image',
-        size: 250,
-        Cell: ({ renderedCellValue, row }) => (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem',
-            }}
-          >
-            <img
-              alt="product Image"
-              height={30}
-              src={row.productImage}
-              loading="lazy"
-              style={{ borderRadius: '50%' }}
-            />
-
-            {/* row.original.avatar */}
-            {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
-            <span>{renderedCellValue}</span>
-          </Box>
-        ),
       },
       {
         accessorKey: 'productQte',
@@ -327,6 +272,10 @@ const ProductDataTable = () => {
           </LocalizationProvider>
         ),
       },
+      {
+        accessorKey: 'category.title',
+        header: 'category',
+      },
     ],
     []
   );
@@ -340,6 +289,40 @@ const ProductDataTable = () => {
     headers: columns.map((c) => c.header),
   };
 
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0];
+    // if (file && file.type === 'image/png') {
+      setSelectedImage(file);
+    // } else {
+    //   setSelectedImage(null);
+    //   alert('Please select a valid PNG file');
+    // }
+  };
+
+  const DeleteImage = async (id, image) => {
+    const path = image.split('\\')[1];
+    if (!window.confirm(`Are you sure you want to delete this image`)) {
+      return;
+    }
+    await api.delete(`${PRODUCTS_URL}/image/${id}/${path}`);
+    await getProducts();
+    alert('image deleted');
+  };
+  const handleUpload = async (id) => {
+    const formData = new FormData();
+    formData.append('image', selectedImage);
+    formData.append('id', id);
+    const response =await api.post(`${PRODUCTS_URL}/image/${id}`,formData);
+    if(response.data){
+      await getProducts();
+      alert("added succefuly")
+    }
+    console.log(formData);
+    setSelectedImage(null);
+  };
+  const handleButtonClick = () => {
+    ImageInput.current.click();
+  };
   const csvExporter = new ExportToCsv(csvOptions);
   let content;
   // if (isLoading) return <p>is Loading </p>;
@@ -359,21 +342,58 @@ const ProductDataTable = () => {
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
       renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-          }}
-        >
-          <img alt="image" height={150} src={row.original?.productImage} loading="lazy" />
-          <img alt="bank card" height={150} src={row.original?.credit} loading="lazy" />
-          {/* style={{ borderRadius: '50%' }} */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">Signature Catch Phrase: </Typography>
-            <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
-          </Box>
-        </Box>
+        <>
+        
+          <ImageList sx={{ width: 2000, height: 160 }} cols={12} rowHeight={164}>
+
+            <Button onClick={handleButtonClick}>
+              <input
+                style={{ display: 'none' }}
+                accept="image/png"
+                id="productImage"
+                onChange={handleImageSelect}
+                name="productImage"
+                type="file"
+                ref={ImageInput}
+              />
+              <Add />
+            </Button>
+            {selectedImage && (
+            <>
+              {/* <Typography color="text.secondary" variant="body2">
+                Selected Image: {selectedImage.name}
+              </Typography> */}
+
+              <Button fullWidth variant="text" onClick={()=>handleUpload(row.original._id)}>
+                Upload 
+              </Button>
+            </>
+          )}
+            {row.original.productImages.map((image) => (
+              <ImageListItem key={image}>
+                <img
+                  width={200}
+                  height={200}
+                  src={image ? `${BASE_URL}${image.split('\\')[1]}` : 'null'}
+                  srcSet={image ? `${BASE_URL}${image.split('\\')[1]}` : 'null'}
+                  alt={image}
+                  loading="lazy"
+                />
+                <IconButton
+                  onClick={() => DeleteImage(row.original._id, image)}
+                  sx={{
+                    color: 'red',
+                    backgroundColor: 'white',
+                    position: 'absolute',
+                    buttom: '50%',
+                  }}
+                >
+                  <Delete />
+                </IconButton>
+              </ImageListItem>
+            ))}
+          </ImageList>
+        </>
       )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
@@ -390,26 +410,15 @@ const ProductDataTable = () => {
         </Box>
       )}
       renderTopToolbarCustomActions={({ table }) => {
-        // <Button color="secondary" onClick={() => setCreateModalOpen(true)} variant="contained"></Button>;
-
-        const handleDeactivate = () => {
+        const handleDeleteSelected = () => {
           table.getSelectedRowModel().flatRows.map((row) => {
-            alert('deactivating ' + row.getValue('name'));
+            if (!window.confirm(`Are you sure you want to delete ${row.getValue('productLabel')}`)) {
+              return;
+            }
+            //send api delete request here, then refetch or update local table data for re-render
+            deleteProduct(row.getValue('_id'));
           });
         };
-
-        // const handleActivate = () => {
-        //   table.getSelectedRowModel().flatRows.map((row) => {
-        //     alert('activating ' + row.getValue('name'));
-        //   });
-        // };
-
-        // const handleContact = () => {
-        //   table.getSelectedRowModel().flatRows.map((row) => {
-        //     alert('contact ' + row.getValue('name'));
-        //   });
-        // };
-
         const handleExportRows = (rows) => {
           csvExporter.generateCsv(rows.map((row) => row.original));
         };
@@ -420,14 +429,6 @@ const ProductDataTable = () => {
 
         return (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {/* <Button
-              color="primary"
-              //export all data that is currently in the table (ignore pagination, sorting, filtering, etc.)
-              onClick={handleExportData}
-              variant="contained"
-            >
-              Export All Data
-            </Button> */}
             <Button color="info" onClick={() => setCreateModalOpen(true)} variant="contained">
               Create New Product
             </Button>
@@ -443,10 +444,10 @@ const ProductDataTable = () => {
             <Button
               color="error"
               disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleDeactivate}
+              onClick={handleDeleteSelected}
               variant="contained"
             >
-              Deactivate
+              Delete selected
             </Button>
             <CreateNewAccountModal
               columns={columns}
@@ -454,27 +455,53 @@ const ProductDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
-            {/* <Button
-              color="success"
-              disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleActivate}
-              variant="contained"
-            >
-              Activate
-            </Button>
-            <Button color="info" disabled={!table.getIsSomeRowsSelected()} onClick={handleContact} variant="contained">
-              Contact
-            </Button> */}
           </div>
         );
       }}
     />
   );
-  // else return <p>{error}</p>;
 };
 export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
   // const [addProduct] = useAddProductMutation();
+  const ImageInput = useRef();
+  const api = useAxios();
+  const user = useSelector(selectCurrentUser);
+  const [companies, setCompanies] = useState([]);
+  const [brand, setBrand] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
 
+  useEffect(() => {
+    api
+      .get(`${CATEGORY_URL}/store/${user.store}`)
+      .then((response) => {
+        setCompanies(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    api
+      .get(`${BRANDS_URL}/store/${user.store}`)
+      .then((response) => {
+        setBrand(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
+  const handleButtonClick = () => {
+    ImageInput.current.click();
+  };
+  const handleImageSelect = (event) => {
+    const files = event.target.files;
+    // for (var file of files) {
+    //   if (file && file.type !== 'image/png') {
+    //     setSelectedImages(null);
+    //     return alert('Please select a valid PNG file');
+    //   }
+    // }
+    setSelectedImages(files);
+    setValues({ ...values, [event.target.name]: files });
+  };
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
       acc[column.accessorKey ?? ''] = '';
@@ -484,7 +511,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     //put your validation logic here
-    console.log(values);
+    // console.log(values);
     // createProduct(values,token);
     // try {
     //   const response = await addProduct(values).unwrap();
@@ -493,6 +520,8 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     // }
     onSubmit(values);
     onClose();
+    setValues(null)
+    setSelectedImages([])
     //  window.location.reload(true);
   };
 
@@ -520,12 +549,15 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
             {columns
               .filter((column) => {
                 if (column.accessorKey == '_id') return false;
+                if (column.accessorKey == 'category.title') return false;
+                if (column.accessorKey == 'brand.title') return false;
                 else if (column.id == 'createdAt') return false;
                 else if (column.id == 'productLabel') return false;
                 else return true;
               })
               .map((column) => (
                 <TextField
+                  required
                   key={column.accessorKey == '' ? column.accessorKey : column.id}
                   label={column.header}
                   name={column.accessorKey !== '' ? column.accessorKey : column.id}
@@ -533,7 +565,68 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
                   onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
                 />
               ))}
+
+            <FormControl fullWidth>
+              <InputLabel id="categoryId">Category </InputLabel>
+              <Select
+                required
+                labelId="category"
+                id="categoryId"
+                name="categoryId"
+                label="Category"
+                onChange={(e) => {
+                  setValues({ ...values, [e.target.name]: e.target.value });
+                }}
+              >
+                {companies.map((option) => (
+                  <MenuItem key={option._id} value={option._id}>
+                    {option.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel id="brandId">Brand </InputLabel>
+              <Select
+                required
+                labelId="brand"
+                id="brandId"
+                name="brandId"
+                label="Brand"
+                onChange={(e) => {
+                  setValues({ ...values, [e.target.name]: e.target.value });
+                }}
+              >
+                {brand.map((option) => (
+                  <MenuItem key={option._id} value={option._id}>
+                    {option.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Stack>
+          <input
+            style={{ display: 'none' }}
+            accept="image/png"
+            id="productImages"
+            onChange={handleImageSelect}
+            name="productImages"
+            type="file"
+            multiple
+            ref={ImageInput}
+          />
+          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
+            Select Products Photos
+          </Button>
+
+          {selectedImages && (
+            <>
+              <Typography color="text.secondary" variant="body2">
+                Selected Image length: {selectedImages.length}
+              </Typography>
+            </>
+          )}
         </form>
       </DialogContent>
 

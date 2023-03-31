@@ -1,8 +1,8 @@
 import { Helmet } from 'react-helmet-async';
-import { filter } from 'lodash';
-import { sentenceCase } from 'change-case';
-import { useState } from 'react';
-import Modal from '@mui/material/Modal/';
+// import { filter } from 'lodash';
+// import { sentenceCase } from 'change-case';
+// import { useState } from 'react';
+// import Modal from '@mui/material/Modal/';
 
 // @mui
 import {
@@ -20,26 +20,28 @@ import {
 // mock
 // import USERLIST from '../../_mock/user';
 // import Example from '../../components/data-table/dataTablev2';
-import UserDataTable from '../../components/data-table/UserDataTable';
+// import UserDataTable from '../../components/data-table/UserDataTable';
+import StoreDataTable from '../../components/data-table/StoreDataTable';
 
-export default function UserPage() {
-
+// ----------------------------------------------------------------------
+ 
+export default function StorePage() {
   return (
     <>
       <Helmet>
-        <title> Users </title>
+        <title> Stores  </title>
       </Helmet>
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Manage Users
+            Manage Stores 
           </Typography>
         </Stack>
 
         <Card>
           {/* <Example/> */}
-          <UserDataTable />
+          <StoreDataTable />
         </Card>
       </Container>
     </>

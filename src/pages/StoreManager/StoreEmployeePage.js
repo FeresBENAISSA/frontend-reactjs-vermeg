@@ -8,20 +8,21 @@ import Modal from '@mui/material/Modal/';
 import { Card, Stack, Container, Typography } from '@mui/material';
 // components
 import ProductDataTable from '../../components/data-table/ProductDataTable';
+import EmployeeDataTable from '../../components/data-table/EmployeeDataTable';
 
 // ----------------------------------------------------------------------
 
-export default function UserPage() {
+export default function StoreEmployeePage() {
   return (
     <>
       <Helmet>
-        <title> Products</title>
+        <title> Employees</title>
       </Helmet>
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Product
+            Employees
             {/* {
         products.map((product)=><p>{product.productLabel}</p>)
       } */}
@@ -32,7 +33,7 @@ export default function UserPage() {
         </Stack>
 
         <Card>
-          <ProductDataTable />
+          <EmployeeDataTable />
         </Card>
       </Container>
     </>

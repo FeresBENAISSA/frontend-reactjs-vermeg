@@ -32,6 +32,8 @@ export default function AccountPopover() {
   const [open, setOpen] = useState(null);
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser)
+  const [userDb,setUserDb]=useState(user);
+  
   // const username = useSelector(selectCurrentUsername)
   const [logout]= useLogoutMutation();
   const handleOpen = (event) => {
@@ -68,6 +70,7 @@ export default function AccountPopover() {
         }}
       > 
         <Avatar src={user.avatar?Constants.BASE_URL+user.avatar.split('\\')[1]:""} alt="photoURL" />
+        
       </IconButton>
 
       <Popover

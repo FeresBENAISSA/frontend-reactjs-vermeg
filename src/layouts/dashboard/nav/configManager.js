@@ -22,6 +22,21 @@ const navConfigManager = [
     icon: icon('ic_cart'),
   },
   {
+    title: 'categories',
+    path: '/dashboard/categories',
+    icon: icon('ic_cart'),
+  },
+  {
+    title: 'brands',
+    path: '/dashboard/brands',
+    icon: icon('ic_cart'),
+  },
+  {
+    title: 'employee',
+    path: '/dashboard/employee',
+    icon: icon('ic_cart'),
+  },
+  {
     title: 'profile',
     path: '/dashboard/profile',
     icon: icon('ic_user'),

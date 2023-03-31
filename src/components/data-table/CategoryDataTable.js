@@ -1,68 +1,82 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-
 //MRT Imports
 import MaterialReactTable from 'material-react-table';
-import { Delete, Edit } from '@mui/icons-material';
+import {
+  Cable,
+  Delete,
+  Edit,
+  PhoneIphone,
+  LaptopMac,
+  CarRental,
+  Games,
+  LocalGroceryStore,
+  AccessibilityNew,
+  Brush,
+  Monitor,
+  BikeScooter,
+  PersonalVideo,DesktopWindows
+} from '@mui/icons-material';
 
 //Material-UI Imports
 import {
   Box,
   Button,
-  ListItemIcon,
-  MenuItem,
   Typography,
   TextField,
   Tooltip,
   IconButton,
-  Alert,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Stack,
-  Select,
   InputLabel,
   FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 
 import { ExportToCsv } from 'export-to-csv';
 // import API
 import useAxios from '../../api/axios';
-import { BASE_URL, STORES_URL } from '../../Constants';
-const storeImage = require('./avatar_1.jpg');
-
-const StoreDataTable = () => {
+import { CATEGORY_URL } from '../../Constants';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../redux/features/auth/authSlice';
+const CategoryDataTable = () => {
+  const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
 
-  const getStores = async () => {
+  const getCategories = async () => {
     try {
-      const response = await api.get(STORES_URL);
+      const response = await api.get(`${CATEGORY_URL}/store/${user.store}`);
       if (!response?.data) throw Error('no data found');
-      const stores = response.data;
-      console.log(stores);
-      setData(stores);
+      const categories = response.data;
+      console.log(categories);
+      setData(categories);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const deleteStore = async (id) => {
-    await api.delete(`${STORES_URL}/${id}`);
-    await getStores();
+  const deleteCategory = async (id) => {
+    await api.delete(`${CATEGORY_URL}/${id}`);
+    await getCategories();
     alert('deleted succefuly');
   };
-  const updateStore = async (values) => {
-    await api.put(STORES_URL, values);
+  const updateCategory = async (values) => {
+    await api.put(CATEGORY_URL, values);
   };
-  const createStore = async (values) => {
-    const response = await api.post(STORES_URL, values);
+  const createCategory = async (values) => {
+    console.log(values);
+    const response = await api.post(CATEGORY_URL, values);
   };
+
   useEffect(() => {
-    getStores();
+    getCategories();
   }, []);
 
   useEffect(() => {
@@ -71,12 +85,13 @@ const StoreDataTable = () => {
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
-
-    const formData = new FormData();
-    Object.keys(values).forEach((key) => formData.append(key, values[key]));
-    console.log(formData);
-    await createStore(formData);
-    getStores();
+    values.storeId = user.store;
+    // const formData = new FormData();
+    // Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    // formData.append("storeId",user.store)
+    // console.log(formData);
+    await createCategory(values);
+    getCategories();
     // alert(' success ');
   };
 
@@ -86,9 +101,9 @@ const StoreDataTable = () => {
       console.log(values);
       tableData[row.index] = values;
       //roles from string to table
-      console.log(tableData[row.index].roles);
+      // console.log(tableData[row.index].roles);
       //send/receive api updates here, then refetch or update local table data for re-render
-      await updateStore(tableData[row.index]);
+      await updateCategory(tableData[row.index]);
       setTableData([...tableData]);
       exitEditingMode(); //required to exit editing mode and close modal
     }
@@ -104,7 +119,7 @@ const StoreDataTable = () => {
         return;
       }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteStore(row.getValue('_id'));
+      deleteCategory(row.getValue('_id'));
     },
     [tableData]
   );
@@ -146,60 +161,20 @@ const StoreDataTable = () => {
         },
       },
       {
-        accessorKey: `storeLogo`, //accessorFn used to join multiple data into a single cell
-        //id is still required when using accessorFn instead of accessorKey
-        header: 'Logo',
-        size: 10,
-        muiTableBodyCellEditTextFieldProps: {
-          disabled: true,
-        },
-        Cell: ({ renderedCellValue, row }) => (
-          <Box
-            sx={{
-              display: 'flex',
-
-              alignItems: 'center',
-
-              gap: '1rem',
-            }}
-          >
-            <img
-              alt="avatar"
-              height={50}
-              width={50}
-              src={row.original.storeLogo ? BASE_URL + row.original.storeLogo.split('\\')[1] : storeImage}
-              loading="lazy"
-              style={{ borderRadius: '50%' }}
-            />
-          </Box>
-        ),
+        accessorKey: 'title', //simple recommended way to define a column
+        header: 'Title',
       },
       {
-        accessorKey: 'storeLabel', //simple recommended way to define a column
-        header: 'Label',
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+        accessorKey: 'description', //simple recommended way to define a column
+        header: 'Description',
       },
-      {
-        accessorKey: 'storeLocation', //simple recommended way to define a column
-        header: 'Location',
-      },
-      {
-        accessorKey: 'storePhoneNumber', //simple recommended way to define a column
-        header: 'PhoneNumber',
-      },
-      {
-        accessorKey: 'storeEmail', //simple recommended way to define a column
-        header: 'Email',
-      },
-
       // {
-      //   accessorKey: 'roles', //simple recommended way to define a column
-      //   header: 'Roles',
-      //   muiTableBodyCellEditTextFieldProps: {
-      //     disabled: true,
-      //   },
+      //   giaccessorKey: 'icon', //simple recommended way to define a column
+      //   header: 'icon',
+      // },
+      // {
+      //   accessorKey: 'image', //simple recommended way to define a column
+      //   header: 'image',
       // },
     ],
     [getCommonEditTextFieldProps]
@@ -216,8 +191,7 @@ const StoreDataTable = () => {
 
   const csvExporter = new ExportToCsv(csvOptions);
   let content;
-  // if (isLoading) return <p>is Loading </p>;
-  // else if (isSuccess)
+
   return (
     <MaterialReactTable
       columns={columns}
@@ -232,31 +206,6 @@ const StoreDataTable = () => {
       enableRowSelection
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
-      renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-evenly',
-            alignItems: 'center',
-          }}
-        >
-          {' '}
-          <Typography variant="h6">Logo of {row.original.storeLabel}: </Typography>
-          <br />
-          <img
-            alt="image"
-            height={150}
-            src={row.original.storeLogo ? BASE_URL + row.original.storeLogo.split('\\')[1] : storeImage}
-            loading="lazy"
-          />
-          {/* <img alt="bank card" height={150} src={row.original.storeLogo ? BASE_URL+row.original.storeLogo.split('\\')[1] : storeImage} loading="lazy" /> */}
-          {/* style={{ borderRadius: '50%' }} */}
-          {/* <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">Signature Catch Phrase: </Typography>
-            <Typography variant="h1">&quot;{row.original.storeLabel}&quot;</Typography>
-          </Box> */}
-        </Box>
-      )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
@@ -290,7 +239,7 @@ const StoreDataTable = () => {
         return (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button color="info" onClick={() => setCreateModalOpen(true)} variant="contained">
-              Create New Store
+              Create New Category
             </Button>
             <Button
               color="warning"
@@ -324,36 +273,8 @@ const StoreDataTable = () => {
 
 export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
   // const [addProduct] = useAddProductMutation();
-  const ImageInput = useRef();
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [companies, setCompanies] = useState([]);
 
   const api = useAxios();
-  useEffect(() => {
-    api
-      .get('/api/companies')
-      .then((response) => {
-        setCompanies(response.data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
-
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
-
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === 'image/png') {
-      setSelectedImage(file);
-      setValues({ ...values, [event.target.name]: file });
-    } else {
-      setSelectedImage(null);
-      alert('Please select a valid PNG file');
-    }
-  };
 
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
@@ -373,12 +294,11 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
     }
     onSubmit(values);
     onClose();
-    setSelectedImage(null)
   };
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Store</DialogTitle>
+      <DialogTitle textAlign="center">Create New Category</DialogTitle>
 
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
@@ -395,6 +315,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
               .filter((column) => {
                 if (column.accessorKey == '_id') return false;
                 if (column.accessorKey == 'storeLogo') return false;
+                if (column.accessorKey == 'icon') return false;
                 else if (column.id == 'fullname') return false;
                 else return true;
               })
@@ -407,50 +328,69 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
                   onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
                 />
               ))}
-          
-          <FormControl fullWidth>
-            <InputLabel id="company">company </InputLabel>
-            <Select
-              labelId="company"
-              id="companyId"
-              name="companyId"
-              label="Company"
-              onChange={(e) => {
-                console.log(e.target);
-                setValues({ ...values, [e.target.name]: e.target.value });
-              }}
-            >
-              {companies.map((option) => (
-                <MenuItem key={option.companyLabel} value={option._id}>
-                  {option.companyLabel}
+            <FormControl fullWidth>
+              <InputLabel id="icon">Icon </InputLabel>
+              <Select
+                labelId="icon"
+                id="icon"
+                name="icon"
+                label="icon"
+                onChange={(e) => {
+                  console.log(e.target);
+                  setValues({ ...values, [e.target.name]: e.target.value });
+                }}
+              >
+                <MenuItem value={'electronics'}>
+                  {' '}
+                  <Cable /> : Electronics
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                <MenuItem value={'cosmetics'}>
+                  {' '}
+                  <Brush /> : Cosmetics
+                </MenuItem>
+                <MenuItem value={'garments'}>
+                  {' '}
+                  <AccessibilityNew /> : Garments
+                </MenuItem>
+                <MenuItem value={'grocery'}>
+                  {' '}
+                  <LocalGroceryStore /> : Grocery
+                </MenuItem>
+                <MenuItem value={'console'}>
+                  {' '}
+                  <Games /> : Console
+                </MenuItem>
+                <MenuItem value={'car'}>
+                  {' '}
+                  <CarRental /> : Car
+                </MenuItem>
+                <MenuItem value={'computer'}>
+                  {' '}
+                  <LaptopMac /> : Computer
+                </MenuItem>
+                <MenuItem value={'smartphone'}>
+                  {' '}
+                  <PhoneIphone /> : Smartphone
+                </MenuItem>
+                <MenuItem value={'monitor'}>
+                  {' '}
+                  <Monitor /> : Monitor
+                </MenuItem>
+                <MenuItem value={'tv'}>
+                  {' '}
+                  <PersonalVideo /> : Tv
+                </MenuItem>
+                <MenuItem value={'e-bike'}>
+                  {' '}
+                  <BikeScooter /> : E-bike
+                </MenuItem>
+                {/* <MenuItem value={'desktop'}>
+                  {' '}
+                  <DesktopWindows /> : Desktop
+                </MenuItem> */}
+              </Select>
+            </FormControl>
           </Stack>
-          <input
-            style={{ display: 'none' }}
-            accept="image/png"
-            id="storeLogo"
-            onChange={handleImageSelect}
-            name="storeLogo"
-            type="file"
-            ref={ImageInput}
-          />
-          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select store logo
-          </Button>
-          {selectedImage && (
-            <>
-              <Typography color="text.secondary" variant="body2">
-                Selected Image: {selectedImage.name}
-              </Typography>
-
-              {/* <Button fullWidth variant="text" onClick={handleUpload}>
-                Upload
-              </Button> */}
-            </>
-          )}
         </form>
       </DialogContent>
 
@@ -458,7 +398,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
         <Button onClick={onClose}>Cancel</Button>
 
         <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New Store
+          Create New Category
         </Button>
       </DialogActions>
     </Dialog>
@@ -466,4 +406,4 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
 };
 const validateRequired = (value) => !!value.length;
 
-export default StoreDataTable;
+export default CategoryDataTable;

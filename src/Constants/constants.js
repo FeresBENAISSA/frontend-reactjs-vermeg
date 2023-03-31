@@ -1,4 +1,12 @@
 export const BASE_URL="http://localhost:5001/"
 export const USERS_URL = 'api/users';
 export const PRODUCTS_URL ="api/products"
-export const STORE_URL="api/stores"
+export const STORES_URL="api/stores"
+export const CATEGORY_URL="api/categories"
+export const AVAILABLE_STORES_URL="api/stores/availableStores"
+export const COMPANIES_URL="api/companies"
+export const BRANDS_URL="api/brands"
+export const STORE_MANAGER="STORE_MANAGER"
+export const STORE_EMPLOYEE="STORE_EMPLOYEE"
+export const BANK_AGENT="BANK_AGENT"
+export const ADMIN="ADMIN"

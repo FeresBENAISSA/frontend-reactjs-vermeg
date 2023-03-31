@@ -2,7 +2,7 @@
 import SvgColor from '../../../components/svg-color';
 // ----------------------------------------------------------------------
 
-const icon = (name) => <SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />;
+const icon = (name) => <img src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />;
 
 
 const navConfigAdmin = [
@@ -12,8 +12,18 @@ const navConfigAdmin = [
     icon: icon('ic_analytics'),
   },
   {
-    title: 'user',
+    title: ' users',
     path: '/dashboard/user',
+    icon: icon('ic_user'),
+  },
+  {
+    title: 'stores',
+    path: '/dashboard/store',
+    icon: icon('ic_user'),
+  },
+  {
+    title: 'Companies',
+    path: '/dashboard/company',
     icon: icon('ic_user'),
   },
   {

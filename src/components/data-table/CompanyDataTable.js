@@ -3,6 +3,7 @@ import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 //MRT Imports
 import MaterialReactTable from 'material-react-table';
 import { Delete, Edit } from '@mui/icons-material';
+import * as yup from 'yup';
 
 //Material-UI Imports
 import {
@@ -27,44 +28,43 @@ import {
 
 import { ExportToCsv } from 'export-to-csv';
 // import API
-import { selectCurrentToken } from '../../redux/features/auth/authSlice';
-import { useSelector } from 'react-redux';
 import useAxios from '../../api/axios';
-import { ADMIN, AVAILABLE_STORES_URL, BANK_AGENT, BASE_URL, STORE_MANAGER, USERS_URL } from '../../Constants';
-const userImage = require('./avatar_1.jpg');
+import { BASE_URL, COMPANIES_URL } from '../../Constants';
+import { number } from 'prop-types';
+const companyImage = require('./avatar_1.jpg');
 
-const UserDataTable = () => {
-  const token = useSelector(selectCurrentToken);
+const CompanyDataTable = () => {
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
 
-  const getUsers = async () => {
+  const getCompanies = async () => {
     try {
-      const response = await api.get(USERS_URL);
+      const response = await api.get(COMPANIES_URL);
       if (!response?.data) throw Error('no data found');
-      const users = response.data;
-      console.log(users);
-      setData(users);
+      const companies = response.data;
+      console.log(companies);
+      setData(companies);
     } catch (error) {
       console.log(error);
     }
   };
-  const deleteUser = async (id) => {
-    await api.delete(`${USERS_URL}/${id}`);
-    await getUsers();
+
+  const deleteCompany = async (id) => {
+    await api.delete(`${COMPANIES_URL}/${id}`);
+    await getCompanies();
     alert('deleted succefuly');
   };
-  const updateUser = async (values) => {
-    await api.put(USERS_URL, values);
+  const updateCompany = async (values) => {
+    await api.put(COMPANIES_URL, values);
   };
-  const createUser = async (values) => {
-    const response = await api.post(USERS_URL, values);
+  const createCompany = async (values) => {
+    const response = await api.post(COMPANIES_URL, values);
   };
   useEffect(() => {
-    getUsers();
+    getCompanies();
   }, []);
 
   useEffect(() => {
@@ -73,11 +73,13 @@ const UserDataTable = () => {
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
+
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
     console.log(formData);
-    await createUser(formData);
-    getUsers();
+    await createCompany(formData);
+    getCompanies();
+    // alert(' success ');
   };
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
@@ -88,7 +90,7 @@ const UserDataTable = () => {
       //roles from string to table
       console.log(tableData[row.index].roles);
       //send/receive api updates here, then refetch or update local table data for re-render
-      await updateUser(tableData[row.index]);
+      await updateCompany(tableData[row.index]);
       setTableData([...tableData]);
       exitEditingMode(); //required to exit editing mode and close modal
     }
@@ -100,14 +102,15 @@ const UserDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('_id')}`)) {
+      if (!window.confirm(`Are you sure you want to delete ${row.getValue('companyLabel')}`)) {
         return;
       }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteUser(row.getValue('_id'));
+      deleteCompany(row.getValue('_id'));
     },
     [tableData]
   );
+
   const getCommonEditTextFieldProps = useCallback(
     (cell) => {
       return {
@@ -145,7 +148,7 @@ const UserDataTable = () => {
         },
       },
       {
-        accessorKey: `avatar`, //accessorFn used to join multiple data into a single cell
+        accessorKey: `companyLogo`, //accessorFn used to join multiple data into a single cell
         //id is still required when using accessorFn instead of accessorKey
         header: 'Logo',
         size: 10,
@@ -166,7 +169,7 @@ const UserDataTable = () => {
               alt="avatar"
               height={50}
               width={50}
-              src={row.original.avatar ? BASE_URL + row.original.avatar.split('\\')[1] : userImage}
+              src={row.original.companyLogo ? BASE_URL + row.original.companyLogo.split('\\')[1] : companyImage}
               loading="lazy"
               style={{ borderRadius: '50%' }}
             />
@@ -174,64 +177,32 @@ const UserDataTable = () => {
         ),
       },
       {
-        accessorKey: 'firstname', //simple recommended way to define a column
-        header: 'firstname',
-      },
-      {
-        accessorKey: 'lastname', //simple recommended way to define a column
-        header: 'lastname',
-      },
-      // {
-      //   accessorFn: (row) => `${row.firstname} ${row.lastname}`, //accessorFn used to join multiple data into a single cell
-      //   id: 'name', //id is still required when using accessorFn instead of accessorKey
-      //   header: 'Full Name',
-      //   size: 250,
-      //   Cell: ({ renderedCellValue, row }) => (
-      //     <Box
-      //       sx={{
-      //         display: 'flex',
-
-      //         alignItems: 'center',
-
-      //         gap: '1rem',
-      //       }}
-      //     >
-      //       <img
-      //         alt="avatar"
-      //         height={40}
-      //         width={40}
-      //         src={row.original.avatar ? BASE_URL + row.original.avatar.split('\\')[1] : userImage}
-      //         loading="lazy"
-      //         style={{ borderRadius: '50%' }}
-      //       />
-      //       {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
-      //       <span>{renderedCellValue}</span>
-      //     </Box>
-      //   ),
-      // },
-      {
-        accessorKey: 'username', //simple recommended way to define a column
-        header: 'Username',
+        accessorKey: 'companyLabel', //simple recommended way to define a column
+        header: 'Label',
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
         }),
       },
       {
-        accessorKey: 'email', //simple recommended way to define a column
-        header: 'Email',
-      },
-
-      {
-        accessorKey: 'roles', //simple recommended way to define a column
-        header: 'Roles',
-        muiTableBodyCellEditTextFieldProps: {
-          disabled: true,
-        },
+        accessorKey: 'companyDescription', //simple recommended way to define a column
+        header: 'Description',
       },
       {
-        accessorKey: 'phoneNumber', //simple recommended way to define a column
+        accessorKey: 'companyAddress', //simple recommended way to define a column
+        header: 'Address',
+      },
+      {
+        accessorKey: 'companyPhoneNumber', //simple recommended way to define a column
         header: 'Phone Number',
       },
+
+      // {
+      //   accessorKey: 'roles', //simple recommended way to define a column
+      //   header: 'Roles',
+      //   muiTableBodyCellEditTextFieldProps: {
+      //     disabled: true,
+      //   },
+      // },
     ],
     [getCommonEditTextFieldProps]
   );
@@ -264,22 +235,47 @@ const UserDataTable = () => {
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
       renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-          }}
-        >
-          <img alt="image" height={150} src={row.original?.productImage} loading="lazy" />
-          <img alt="bank card" height={150} src={row.original?.credit} loading="lazy" />
-          {/* style={{ borderRadius: '50%' }} */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">Signature Catch Phrase: </Typography>
-            <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
-            <img src="./id.jpeg" />
-          </Box>
-        </Box>
+        <>
+          {/* <table>
+            <tr>
+              <th>storeLabel</th>
+              <th>storeAddress</th>
+              <th>storeLabel</th>
+            </tr>
+              {row.original.companyStores.map((store) => (
+                  // <Typography variant="h6">{store.storeLabel} : </Typography>
+                  <tr>
+                  <td>{store.storeLabel}</td>
+                  <td>{store.storeAddress}</td>
+                  <td>{store.storeLabel}</td>
+                </tr>
+              ))}
+          </table> */}
+
+        </>
+        // <Box
+        //   sx={{
+        //     display: 'flex',
+        //     justifyContent: 'space-evenly',
+        //     alignItems: 'center',
+        //   }}
+        // >
+        //   {' '}
+        //   <Typography variant="h6">Logo of {row.original.companyLabel}: </Typography>
+        //   <br />
+        //   <img
+        //     alt="image"
+        //     height={150}
+        //     src={row.original.companyLogo ? BASE_URL + row.original.companyLogo.split('\\')[1] : companyImage}
+        //     loading="lazy"
+        //   />
+        //   {/* <img alt="bank card" height={150} src={row.original.storeLogo ? BASE_URL+row.original.storeLogo.split('\\')[1] : companyImage} loading="lazy" /> */}
+        //   {/* style={{ borderRadius: '50%' }} */}
+        //   {/* <Box sx={{ textAlign: 'center' }}>
+        //     <Typography variant="h4">Signature Catch Phrase: </Typography>
+        //     <Typography variant="h1">&quot;{row.original.storeLabel}&quot;</Typography>
+        //   </Box> */}
+        // </Box>
       )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
@@ -314,7 +310,7 @@ const UserDataTable = () => {
         return (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button color="info" onClick={() => setCreateModalOpen(true)} variant="contained">
-              Create New User
+              Create New Company
             </Button>
             <Button
               color="warning"
@@ -331,7 +327,7 @@ const UserDataTable = () => {
               onClick={handleDeleteAll}
               variant="contained"
             >
-              Delete selected
+              Delete
             </Button>
             <CreateNewUserModal
               columns={columns}
@@ -347,16 +343,19 @@ const UserDataTable = () => {
 };
 
 export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
-  // const [addProduct] = useAddProductMutation();
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [subOptions, setSubOptions] = useState([]);
   const ImageInput = useRef();
   const [selectedImage, setSelectedImage] = useState(null);
-  const api = useAxios();
+  // const [errors, setErrors] = useState({
+  //   companyLabel: '',
+  //   companyDescription: '',
+  //   companyAddress: '',
+  //   companyPhoneNumber: '',
+  // });
+
   const handleButtonClick = () => {
     ImageInput.current.click();
   };
-  const getAvailableStores = async () => {};
+
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'image/png') {
@@ -367,151 +366,112 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
       alert('Please select a valid PNG file');
     }
   };
-  useEffect(() => {
-    if (selectedOption === 'STORE_MANAGER') {
-      api
-        .get(AVAILABLE_STORES_URL)
-        .then((response) => {
-          setSubOptions(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
-  }, [selectedOption]);
-
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
-      // console.log(column);
       acc[column.accessorKey ?? ''] = '';
       return acc;
     }, {})
   );
+  // const schema = yup.object().shape({
+  //   companyLabel: yup.string().required('companyLabel is required.'),
+  //   companyDescription: yup.string().required('companyDescription is required.'),
+  //   companyAddress: yup.string().required('companyAddress is required.'),
+  //   companyPhoneNumber: yup.number().typeError('Enter valid Phone Number').required('companyPhoneNumber is required.'),
+  // });
 
   const handleSubmit = async (e) => {
     //put your validation logic here
-    //change role string to table
-    const roles = [];
-    roles.push(values.roles);
-    values.roles = roles;
     console.log(values);
+    // createProduct(values,token);
+    // const companyLabel = values.companyLabel;
+    // const companyDescription = values.companyDescription;
+    // const companyAddress = values.companyAddress;
+    // const companyPhoneNumber = values.companyPhoneNumber;
+    try {
+      // await schema.validate(
+      //   { companyLabel, companyDescription, companyAddress, companyPhoneNumber },
+      //   { abortEarly: false }
+      // );
+      // const response = await addProduct(values).unwrap();
+    } catch (err) {
+      // console.log(err)
+      // const newErrors = {};
+      // err.inner.forEach((error) => {
+      //   newErrors[error.path] = error.message;
+      // });
+      // setErrors(newErrors);
+      console.log(err);
+    }
     onSubmit(values);
+    // setValues()
     onClose();
   };
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New User</DialogTitle>
+      <DialogTitle textAlign="center">Create New Company</DialogTitle>
 
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
               width: '100%',
+
               minWidth: { xs: '300px', sm: '360px', md: '400px' },
+
               gap: '1.5rem',
             }}
           >
-            {' '}
-            {/* <TextField
-              label="firstname"
-              name="firstname"
+            <TextField
+              label="Label"
+              name="companyLabel"
               type="text"
               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+              // helperText={errors.companyLabel && <div>{errors.companyLabel}</div>}
+              // error={errors.companyLabel ? true : false}
             />
             <TextField
-              label="lastname"
-              name="lastname"
+              label="Description"
+              name="companyDescription"
               type="text"
               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            /> */}
-            {columns
-              .filter((column) => {
-                if (column.accessorKey == '_id') return false;
-                else if (column.accessorKey == 'avatar') return false;
-                else if (column.id == 'createdAt') return false;
-                else if (column.id == 'roles') return false;
-                else if (column.id == 'name') return false;
-                else return true;
-              })
-              .map((column) => (
-                <TextField
-                  key={column.accessorKey == '' ? column.accessorKey : column.id}
-                  label={column.header}
-                  name={column.accessorKey !== '' ? column.accessorKey : column.id}
-                  type={column.type}
-                  onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-                />
-              ))}
-            <FormControl fullWidth>
-              <InputLabel id="roles">Roles</InputLabel>
-              <Select
-                labelId="roles"
-                id="roles"
-                name="roles"
-                label="Roles"
-                onChange={(e) => {
-                  setSelectedOption(e.target.value);
-                  setValues({ ...values, [e.target.name]: e.target.value });
-                }}
-              >
-                <MenuItem value={STORE_MANAGER}>Store Manager</MenuItem>
-                <MenuItem value={BANK_AGENT}>Bank agent</MenuItem>
-                <MenuItem value={ADMIN}>Admin </MenuItem>
-              </Select>
-            </FormControl>
-            {selectedOption === 'STORE_MANAGER' ? (
-              <FormControl fullWidth>
-                <InputLabel id="store">Store </InputLabel>
-                <Select
-                  labelId="store"
-                  id="store"
-                  name="storeId"
-                  label="store"
-                  onChange={(e) => {
-                    console.log(e.target);
-                    setValues({ ...values, [e.target.name]: e.target.value });
-                  }}
-                >
-                  {/* <MenuItem value={'FNAC'}>fnac</MenuItem>
-                  <MenuItem value={'DARTY'}>darty</MenuItem>
-                  <MenuItem value={'ADMIN'}>Admin </MenuItem> */}
-                  {subOptions.map((option) => (
-                    <MenuItem key={option.storeLabel} value={option._id}>
-                      {option.storeLabel}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            ) : null}
+              // helperText={errors.companyDescription && <div>{errors.companyDescription}</div>}
+              // error={errors.companyDescription ? true : false}
+            />
             <TextField
-              label="password"
-              name="password"
+              label="Address"
+              name="companyAddress"
               type="text"
               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+              // helperText={errors.companyAddress && <div>{errors.companyAddress}</div>}
+              // error={errors.companyAddress ? true : false}
+            />
+            <TextField
+              label="PhoneNumber"
+              name="companyPhoneNumber"
+              type="number"
+              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+              // helperText={errors.companyPhoneNumber && <div>{errors.companyPhoneNumber}</div>}
+              // error={errors.companyPhoneNumber ? true : false}
             />
           </Stack>
           <input
             style={{ display: 'none' }}
             accept="image/png"
-            id="avatar"
+            id="comapnyLogo"
             onChange={handleImageSelect}
-            name="avatar"
+            name="companyLogo"
             type="file"
             ref={ImageInput}
           />
           <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select user avatar
+            Select Company logo
           </Button>
           {selectedImage && (
             <>
               <Typography color="text.secondary" variant="body2">
                 Selected Image: {selectedImage.name}
               </Typography>
-
-              {/* <Button fullWidth variant="text" onClick={handleUpload}>
-                Upload
-              </Button> */}
             </>
           )}
         </form>
@@ -521,7 +481,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
         <Button onClick={onClose}>Cancel</Button>
 
         <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New User
+          Create New Company
         </Button>
       </DialogActions>
     </Dialog>
@@ -529,4 +489,4 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
 };
 const validateRequired = (value) => !!value.length;
 
-export default UserDataTable;
+export default CompanyDataTable;

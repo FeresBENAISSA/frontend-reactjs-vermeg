@@ -8,62 +8,37 @@ import { ProductSort, ProductList, ProductCartWidget, ProductFilterSidebar } fro
 import PRODUCTS from '../../_mock/products';
 import AccountProfile from '../../sections/@dashboard/account/AccountProfile';
 import { AccountProfileDetails } from '../../sections/@dashboard/account/AccountProfileDetails';
-import { useSelector } from 'react-redux';
-import { selectCurrentEmail, selectCurrentUser, setCredentials } from '../../redux/features/auth/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectCurrentEmail, selectCurrentUser, setCredentials, updateUserAvatar } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
+import { USERS_URL } from '../../Constants';
 
 // ----------------------------------------------------------------------
 
 export default function AdminProfile() {
-  const [openFilter, setOpenFilter] = useState(false);
-  const email = useSelector(selectCurrentEmail);
-  const userExist =useSelector (selectCurrentUser);
-  
-  const [user,setUser] = useState(userExist)
+  const userExist = useSelector(selectCurrentUser);
+  const [user, setUser] = useState(userExist);
   const api = useAxios();
-  const handleOpenFilter = () => {
-    setOpenFilter(true);
-  };
+  const dispatch = useDispatch();
 
-  const handleCloseFilter = () => {
-    setOpenFilter(false);
-  };
-
-  const getUserByEmail = async (email) => {
-    const response = await api.get(`/api/users/${email}`);
-    console.log(response);
+  const getCurrentUser = async () => {
+    const response = await api.get(`/api/users/current`);
+    console.log(response.data.user);
     setUser(response.data.user);
+    dispatch(updateUserAvatar(response.data.user.avatar));
   };
-  useEffect(()=>{
-    getUserByEmail(email);
-  },[])
 
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
 
   return (
     <>
       <Helmet>
-        <title> Dashboard: Products | Minimal UI </title>
+        <title> Profile</title>
       </Helmet>
-
       <Container>
-        {/* <Typography variant="h4" sx={{ mb: 5 }}>
-          Products
-        </Typography> */}
-
-        {/* <Stack direction="row" flexWrap="wrap-reverse" alignItems="center" justifyContent="flex-end" sx={{ mb: 5 }}>
-          <Stack direction="row" spacing={1} flexShrink={0} sx={{ my: 1 }}>
-            <ProductFilterSidebar
-              openFilter={openFilter}
-              onOpenFilter={handleOpenFilter}
-              onCloseFilter={handleCloseFilter}
-            />
-            <ProductSort />
-          </Stack>
-        </Stack>
-
-        <ProductList products={PRODUCTS} />
-        <ProductCartWidget /> */}
-       
          <Stack spacing={3}>
           <div>
             <Typography variant="h4" sx={{ mb: 5 }}>
@@ -71,23 +46,12 @@ export default function AdminProfile() {
             </Typography>
           </div>
           <div>
-            <Grid
-              container
-              spacing={3}
-            >
-              <Grid
-                xs={12}
-                md={6}
-                lg={4}
-              >
-                <AccountProfile user={user} />
+            <Grid container spacing={3}>
+              <Grid xs={12} md={6} lg={4}>
+                <AccountProfile user={user} getCurrentUser={getCurrentUser} setUser={setUser} />
               </Grid>
-              <Grid
-                xs={12}
-                md={6}
-                lg={8}
-              >
-                <AccountProfileDetails user={user} />
+              <Grid xs={12} md={6} lg={8}>
+                <AccountProfileDetails user={user}  getCurrentUser={getCurrentUser} setUser={setUser}/>
               </Grid>
             </Grid>
           </div>

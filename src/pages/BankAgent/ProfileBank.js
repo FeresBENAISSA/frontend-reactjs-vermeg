@@ -8,42 +8,58 @@ import { ProductSort, ProductList, ProductCartWidget, ProductFilterSidebar } fro
 import PRODUCTS from '../../_mock/products';
 import AccountProfile from '../../sections/@dashboard/account/AccountProfile';
 import { AccountProfileDetails } from '../../sections/@dashboard/account/AccountProfileDetails';
-import { useSelector } from 'react-redux';
-import { selectCurrentEmail, selectCurrentUser } from '../../redux/features/auth/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectCurrentEmail, selectCurrentUser, updateUserAvatar } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
+import { USERS_URL } from '../../Constants';
 
 // ----------------------------------------------------------------------
 
 export default function BankProfile() {
-  const [openFilter, setOpenFilter] = useState(false);
   const email = useSelector(selectCurrentEmail);
-  const userExist = useSelector(selectCurrentUser)
-
-  const [user,setUser] = useState(userExist)
+  // const baseuser = useSelector(selectCurrentUser);
+  const userExist = useSelector(selectCurrentUser);
+  const [user, setUser] = useState(userExist);
   const api = useAxios();
-  const handleOpenFilter = () => {
-    setOpenFilter(true);
-  };
+  const dispatch = useDispatch();
 
-  const handleCloseFilter = () => {
-    setOpenFilter(false);
-  };
+  // const getUserByEmail = async (email) => {
+  //   const response = await api.get(`/api/users/${email}`);
+  //   console.log(response);
+  //   setUser(response.data.user);
+  // };
 
-  const getUserByEmail = async (email) => {
-    const response = await api.get(`/api/users/${email}`);
-    console.log(response);
+  const getCurrentUser = async () => {
+    const response = await api.get(`/api/users/current`);
+    console.log(response.data.user);
     setUser(response.data.user);
+    dispatch(updateUserAvatar(response.data.user.avatar));
   };
-  useEffect(()=>{
-    getUserByEmail(email);
-  },[])
+  // const getCurrentUser = async () => {
+  //   const response = await api.get(`/api/users/current`);
+  //   console.log(response);
+  //   setUser(response.data.user);
+  // };
+
+  const updateUser = async (values) => {
+    const response = await api.put(USERS_URL, values);
+    setUser(response.data.user);
+    // console.log(response);
+    // getUserByEmail(email);
+    getCurrentUser();
+  };
+  useEffect(() => {
+    // console.log(user);
+    // getUserByEmail(email);
+    getCurrentUser();
+  }, []);
 
 
 
   return (
     <>
       <Helmet>
-        <title> Dashboard: Products | Minimal UI </title>
+        <title> Bank Profile</title>
       </Helmet>
 
       <Container>
@@ -72,23 +88,12 @@ export default function BankProfile() {
             </Typography>
           </div>
           <div>
-            <Grid
-              container
-              spacing={3}
-            >
-              <Grid
-                xs={12}
-                md={6}
-                lg={4}
-              >
-                <AccountProfile user={user} />
+            <Grid container spacing={3}>
+              <Grid xs={12} md={6} lg={4}>
+                <AccountProfile user={user} getCurrentUser={getCurrentUser} setUser={setUser} />
               </Grid>
-              <Grid
-                xs={12}
-                md={6}
-                lg={8}
-              >
-                <AccountProfileDetails user={user} />
+              <Grid xs={12} md={6} lg={8}>
+                <AccountProfileDetails user={user} updateUser={updateUser} getCurrentUser={getCurrentUser} setUser={setUser}/>
               </Grid>
             </Grid>
           </div>

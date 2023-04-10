@@ -11,16 +11,17 @@ const navConfigBank= [
     path: '/dashboard/bank',
     icon: icon('ic_analytics'),
   },
-  // {
-  //   title: 'user',
-  //   path: '/dashboard/user',
-  //   icon: icon('ic_user'),
-  // },
+  {
+    title: 'Credit Applications',
+    path: '/dashboard/credits',
+    icon: icon('ic_user'),
+  },
   {
     title: 'profile',
     path: '/dashboard/bankprofile',
     icon: icon('ic_user'),
   },
+ 
 ];
 
 export default navConfigBank;

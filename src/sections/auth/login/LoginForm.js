@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // @mui
 import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
@@ -10,26 +10,39 @@ import { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useLoginMutation } from '../../../redux/features/auth/authApiSlice';
 import { setCredentials } from '../../../redux/features/auth/authSlice';
-import axios from '../../../api/axios';
-
-const LOGIN_URL = '/auth';
+import { CometChat } from '@cometchat-pro/chat';
+import { AUTH_KEY } from '../../../Constants';
+import { messaging } from '../../../firebase';
+import { getToken } from 'firebase/messaging';
 
 // ----------------------------------------------------------------------
 
 export default function LoginForm() {
+  const [fcmToken,setFcmToken]= useState();
+  const requestPermission = async () => {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      //GenerateTokon
+      const token= await getToken(messaging);
+      setFcmToken(token)
+      console.log('notif token', token);
+    } else if (permission === 'denied') {
+    }
+  };
+  useEffect(() => {
+    requestPermission();
+  }, []);
+
   const navigate = useNavigate();
-  const location = useLocation();
   const emailRef = useRef();
   const errRef = useRef();
-  const from = location.state?.from?.pathname || '/';
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errMsg, setErrMsg] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const [login, { isLoading }] = useLoginMutation();
+  const [login] = useLoginMutation();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -40,8 +53,8 @@ export default function LoginForm() {
   }, [email, password]);
 
   const handleClick = async () => {
-    const userData = await login({ email, password }).unwrap();
-    console.log(userData);
+    console.log(fcmToken)
+    const userData = await login({ email, password ,fcmToken}).unwrap();
     // console.log(response)c
     const roles = userData.roles;
     try {
@@ -51,9 +64,30 @@ export default function LoginForm() {
       // console.log(response)
       // setAuth({ email, password, roles, accessToken });
       dispatch(setCredentials({ ...userData, email }));
+      const UID = userData.user._id;
+      console.log(userData);
+
+      CometChat.getLoggedinUser().then(
+        (user) => {
+          if (!user) {
+            CometChat.login(UID, AUTH_KEY).then(
+              (user) => {
+                console.log('Login Successful:', { user });
+              },
+              (error) => {
+                console.log('Login failed with exception:', { error });
+              }
+            );
+          }
+        },
+        (error) => {
+          console.log('Some Error Occured', { error });
+        }
+      );
+
       setEmail('');
       setPassword('');
-  
+
       if (roles.includes('BANK_AGENT')) {
         console.log('bank');
         navigate('/dashboard/bank', { replace: true });

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { set, sub } from 'date-fns';
 import { noCase } from 'change-case';
 import { faker } from '@faker-js/faker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // @mui
 import {
   Box,
@@ -25,6 +25,7 @@ import { fToNow } from '../../../utils/formatTime';
 // components
 import Iconify from '../../../components/iconify';
 import Scrollbar from '../../../components/scrollbar';
+import useAxios from '../../../api/axios';
 
 // ----------------------------------------------------------------------
 
@@ -78,10 +79,32 @@ const NOTIFICATIONS = [
 
 export default function NotificationsPopover() {
   const [notifications, setNotifications] = useState(NOTIFICATIONS);
-
-  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
-
+  const [totalUnRead, setTotalUnRead] = useState(null);
+  // const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
+  const api = useAxios();
   const [open, setOpen] = useState(null);
+
+  const getNotifications = async () => {
+    const notifications = await api.get('api/notifications/bank');
+    console.log(notifications.data);
+    setTotalUnRead(countUnreadNotifications(notifications.data));
+    setNotifications(notifications.data);
+    // setNotifications(notifications)
+  };
+  const countUnreadNotifications = () => {
+    var count = 0;
+    notifications.map((notification) => {
+      if (notification.isUnRead === true) count++;
+    });
+    return count;
+  };
+  const updateNotificationStatus = async (id) => {
+    const response = await api.put(`api/notifications/${id}`);
+    console.log(response);
+  };
+  useEffect(() => {
+    getNotifications();
+  }, []);
 
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
@@ -92,12 +115,16 @@ export default function NotificationsPopover() {
   };
 
   const handleMarkAllAsRead = () => {
-    setNotifications(
-      notifications.map((notification) => ({
-        ...notification,
-        isUnRead: false,
-      }))
-    );
+    for (const notification of notifications) {
+      updateNotificationStatus(notification._id);
+    }
+    getNotifications();
+    // setNotifications(
+    //   notifications.map((notification) => ({
+    //     ...notification,
+    //     isUnRead: false,
+    //   }))
+    // );
   };
 
   return (
@@ -150,12 +177,12 @@ export default function NotificationsPopover() {
               </ListSubheader>
             }
           >
-            {notifications.slice(0, 2).map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
+            {notifications.map((notification) => (
+              <NotificationItem key={notification._id} notification={notification} />
             ))}
           </List>
 
-          <List
+          {/* <List
             disablePadding
             subheader={
               <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
@@ -166,7 +193,7 @@ export default function NotificationsPopover() {
             {notifications.slice(2, 5).map((notification) => (
               <NotificationItem key={notification.id} notification={notification} />
             ))}
-          </List>
+          </List> */}
         </Scrollbar>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
@@ -196,7 +223,7 @@ NotificationItem.propTypes = {
 };
 
 function NotificationItem({ notification }) {
-  const { avatar, title } = renderContent(notification);
+  // const { avatar, title } = renderContent(notification);
 
   return (
     <ListItemButton
@@ -210,10 +237,12 @@ function NotificationItem({ notification }) {
       }}
     >
       <ListItemAvatar>
-        <Avatar sx={{ bgcolor: 'background.neutral' }}>{avatar}</Avatar>
+        <Avatar sx={{ bgcolor: 'background.neutral' }}>
+          <img alt={notification.title} src="/assets/icons/ic_notification_mail.svg" />
+        </Avatar>
       </ListItemAvatar>
       <ListItemText
-        primary={title}
+        primary={notification.title}
         secondary={
           <Typography
             variant="caption"

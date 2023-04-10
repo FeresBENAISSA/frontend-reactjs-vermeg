@@ -1,5 +1,4 @@
 import {
-  Input,
   Card,
   Avatar,
   Box,
@@ -8,13 +7,10 @@ import {
   Divider,
   Button,
   Typography,
-  TextField,
 } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useRef, useState } from 'react';
 import useAxios from '../../../api/axios';
 import { BASE_URL } from '../../../Constants';
-import { updateUserAvatar } from '../../../redux/features/auth/authSlice';
 // import Input from '../../../theme/overrides/Input';
 // import Card from "../../../theme/overrides/Card";
 // import Typography from "../../../theme/overrides/Typography";
@@ -23,7 +19,6 @@ const AccountProfile = ({getCurrentUser,user, setUser}) => {
   // const [user, setUser] = useState();
   const ImageInput = useRef();
   const [selectedImage, setSelectedImage] = useState(null);
-  const dispatch = useDispatch();
   const api = useAxios();
 
   // const getCurrentUser = async () => {
@@ -78,7 +73,7 @@ const AccountProfile = ({getCurrentUser,user, setUser}) => {
       const response = await api.post('api/users/upload', formData);
       console.log(response);
       console.log(response.data);
-      if (response.status == 201) {
+      if (response.status === 201) {
         getCurrentUser();
         // setAvatar(BASE_URL + response.data.avatar.split('\\')[1]);
         setSelectedImage(null);

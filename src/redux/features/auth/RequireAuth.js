@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux"
 import { Navigate, Outlet, useLocation } from "react-router-dom"
-import DashboardLayout from "../../../layouts/dashboard/ManagerDashboardLayout"
 import { selectCurrentRoles, selectCurrentToken } from "./authSlice"
 
 const RequireAuth = ({allowedRoles}) => {

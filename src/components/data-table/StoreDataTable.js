@@ -8,13 +8,11 @@ import { Delete, Edit } from '@mui/icons-material';
 import {
   Box,
   Button,
-  ListItemIcon,
   MenuItem,
   Typography,
   TextField,
   Tooltip,
   IconButton,
-  Alert,
   Dialog,
   DialogActions,
   DialogContent,
@@ -29,11 +27,16 @@ import { ExportToCsv } from 'export-to-csv';
 // import API
 import useAxios from '../../api/axios';
 import { BASE_URL, STORES_URL } from '../../Constants';
+import AlertDialog from './AlertDialog';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const storeImage = require('./avatar_1.jpg');
 
 const StoreDataTable = () => {
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -51,15 +54,29 @@ const StoreDataTable = () => {
   };
 
   const deleteStore = async (id) => {
-    await api.delete(`${STORES_URL}/${id}`);
-    await getStores();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${STORES_URL}/${id}`);
+      await getStores();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const updateStore = async (values) => {
-    await api.put(STORES_URL, values);
+    try {
+      const response = await api.put(STORES_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const createStore = async (values) => {
-    const response = await api.post(STORES_URL, values);
+    try {
+      const response = await api.post(STORES_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   useEffect(() => {
     getStores();
@@ -68,6 +85,15 @@ const StoreDataTable = () => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  const handleApiResponse = (response) => {
+    console.log(response);
+    if (response.status === 201 || response.status === 200) {
+      toast.success('operation successfully completed');
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
@@ -100,11 +126,24 @@ const StoreDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('storeLabel')}`)) {
-        return;
-      }
+      // if (!window.confirm(`Are you sure you want to delete ${row.getValue('storeLabel')}`)) {
+      //   return;
+      // }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteStore(row.getValue('_id'));
+      setModalContent({
+        title: 'Delete Store',
+        content: 'Are you sure you want to delete this store?',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteStore(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
     },
     [tableData]
   );
@@ -315,6 +354,8 @@ const StoreDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+            {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}
@@ -373,7 +414,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
     }
     onSubmit(values);
     onClose();
-    setSelectedImage(null)
+    setSelectedImage(null);
   };
 
   return (
@@ -393,40 +434,40 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
           >
             {columns
               .filter((column) => {
-                if (column.accessorKey == '_id') return false;
-                if (column.accessorKey == 'storeLogo') return false;
-                else if (column.id == 'fullname') return false;
+                if (column.accessorKey === '_id') return false;
+                if (column.accessorKey === 'storeLogo') return false;
+                else if (column.id === 'fullname') return false;
                 else return true;
               })
               .map((column) => (
                 <TextField
-                  key={column.accessorKey == '' ? column.accessorKey : column.id}
+                  key={column.accessorKey === '' ? column.accessorKey : column.id}
                   label={column.header}
                   name={column.accessorKey !== '' ? column.accessorKey : column.id}
                   type={column.type}
                   onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
                 />
               ))}
-          
-          <FormControl fullWidth>
-            <InputLabel id="company">company </InputLabel>
-            <Select
-              labelId="company"
-              id="companyId"
-              name="companyId"
-              label="Company"
-              onChange={(e) => {
-                console.log(e.target);
-                setValues({ ...values, [e.target.name]: e.target.value });
-              }}
-            >
-              {companies.map((option) => (
-                <MenuItem key={option.companyLabel} value={option._id}>
-                  {option.companyLabel}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel id="company">company </InputLabel>
+              <Select
+                labelId="company"
+                id="companyId"
+                name="companyId"
+                label="Company"
+                onChange={(e) => {
+                  console.log(e.target);
+                  setValues({ ...values, [e.target.name]: e.target.value });
+                }}
+              >
+                {companies.map((option) => (
+                  <MenuItem key={option.companyLabel} value={option._id}>
+                    {option.companyLabel}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Stack>
           <input
             style={{ display: 'none' }}

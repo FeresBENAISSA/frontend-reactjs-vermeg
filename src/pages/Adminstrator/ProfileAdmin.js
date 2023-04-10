@@ -3,15 +3,11 @@ import { useState,useEffect } from 'react';
 // @mui
 import { Container, Stack, Typography ,Grid} from '@mui/material/';
 // components
-import { ProductSort, ProductList, ProductCartWidget, ProductFilterSidebar } from '../../sections/@dashboard/products';
-// mock
-import PRODUCTS from '../../_mock/products';
 import AccountProfile from '../../sections/@dashboard/account/AccountProfile';
 import { AccountProfileDetails } from '../../sections/@dashboard/account/AccountProfileDetails';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectCurrentEmail, selectCurrentUser, setCredentials, updateUserAvatar } from '../../redux/features/auth/authSlice';
+import { selectCurrentUser, updateUserAvatar } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
-import { USERS_URL } from '../../Constants';
 
 // ----------------------------------------------------------------------
 

@@ -31,16 +31,19 @@ import useAxios from '../../api/axios';
 import { BASE_URL, BRANDS_URL, CATEGORY_URL, STORES_URL } from '../../Constants';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../redux/features/auth/authSlice';
-const storeImage = require('./avatar_1.jpg');
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AlertDialog from './AlertDialog';
 
 const BrandDataTable = () => {
   const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
-
+  // api's
   const getBrands = async () => {
     try {
       const response = await api.get(`${BRANDS_URL}/store/${user.store}`);
@@ -54,16 +57,31 @@ const BrandDataTable = () => {
   };
 
   const deleteBrand = async (id) => {
-    await api.delete(`${BRANDS_URL}/${id}`);
-    await getBrands();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${BRANDS_URL}/${id}`);
+      await getBrands();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
+    // alert('deleted succefuly');
   };
   const updateBrand = async (values) => {
-    await api.put(BRANDS_URL, values);
+    try {
+      const response = await api.put(BRANDS_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const createBrand = async (values) => {
-    console.log(values);
-    const response = await api.post(BRANDS_URL, values);
+    try {
+      const response = await api.post(BRANDS_URL, values);
+      console.log(response)
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   useEffect(() => {
     getBrands();
@@ -72,6 +90,16 @@ const BrandDataTable = () => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  // toast notification functions
+  const handleApiResponse = (response) => {
+    if (response.status === 201) {
+      console.log(response.data);
+      toast.success('deleted succefuly');
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
@@ -105,11 +133,25 @@ const BrandDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('title')}`)) {
-        return;
-      }
+      // if (!window.confirm(`Are you sure you want to delete ${row.getValue('title')}`)) {
+      //   return;
+      // }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteBrand(row.getValue('_id'));
+
+      setModalContent({
+        title: 'Delete Brand',
+        content: 'Are you sure you want to delete this brand?',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteBrand(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
     },
     [tableData]
   );
@@ -317,6 +359,8 @@ const BrandDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+            {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}

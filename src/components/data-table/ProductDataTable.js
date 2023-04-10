@@ -34,12 +34,17 @@ import { selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { useSelector } from 'react-redux';
 import useAxios from '../../api/axios';
 import { BASE_URL, BRANDS_URL, CATEGORY_URL, PRODUCTS_URL } from './../../Constants/constants';
+import AlertDialog from './AlertDialog';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const productImage = require('./avatar_1.jpg');
 
 const ProductDataTable = () => {
   const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -49,7 +54,6 @@ const ProductDataTable = () => {
   const getProducts = async () => {
     try {
       const response = await api.get(`${PRODUCTS_URL}/store/${user.store}`);
-
       if (!response?.data) throw Error('no data found');
       const products = response.data;
       console.log(products);
@@ -59,16 +63,29 @@ const ProductDataTable = () => {
     }
   };
   const deleteProduct = async (id) => {
-    await api.delete(`${PRODUCTS_URL}/${id}`);
-    await getProducts();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${PRODUCTS_URL}/${id}`);
+      await getProducts();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const updateProduct = async (value) => {
-    await api.put(PRODUCTS_URL, value);
+    try {
+      const response = await api.put(PRODUCTS_URL, value);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const createProduct = async (values) => {
-    // console.log(values);
+    try {
     const response = await api.post(PRODUCTS_URL, values);
+    handleApiResponse(response);
+  } catch (error) {
+    toast.error('Failed');
+  }
   };
   useEffect(() => {
     getProducts();
@@ -77,6 +94,15 @@ const ProductDataTable = () => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  const handleApiResponse = (response) => {
+    console.log(response)
+    if (response.status === 201 ||response.status === 200) {
+      toast.success('operation successfully completed');
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
@@ -119,11 +145,24 @@ const ProductDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('productLabel')}`)) {
-        return;
-      }
+      // if (!window.confirm(`Are you sure you want to delete ${row.getValue('productLabel')}`)) {
+      //   return;
+      // }
+      setModalContent({
+        title: 'Delete Product',
+        content: 'Are you sure you want to delete this product?',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteProduct(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
       //send api delete request here, then refetch or update local table data for re-render
-      deleteProduct(row.getValue('_id'));
       // window.location.reload(true);
     },
     [tableData]
@@ -292,7 +331,7 @@ const ProductDataTable = () => {
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
     // if (file && file.type === 'image/png') {
-      setSelectedImage(file);
+    setSelectedImage(file);
     // } else {
     //   setSelectedImage(null);
     //   alert('Please select a valid PNG file');
@@ -312,10 +351,10 @@ const ProductDataTable = () => {
     const formData = new FormData();
     formData.append('image', selectedImage);
     formData.append('id', id);
-    const response =await api.post(`${PRODUCTS_URL}/image/${id}`,formData);
-    if(response.data){
+    const response = await api.post(`${PRODUCTS_URL}/image/${id}`, formData);
+    if (response.data) {
       await getProducts();
-      alert("added succefuly")
+      alert('added succefuly');
     }
     console.log(formData);
     setSelectedImage(null);
@@ -343,9 +382,7 @@ const ProductDataTable = () => {
       positionToolbarAlertBanner="bottom"
       renderDetailPanel={({ row }) => (
         <>
-        
           <ImageList sx={{ width: 2000, height: 160 }} cols={12} rowHeight={164}>
-
             <Button onClick={handleButtonClick}>
               <input
                 style={{ display: 'none' }}
@@ -359,16 +396,16 @@ const ProductDataTable = () => {
               <Add />
             </Button>
             {selectedImage && (
-            <>
-              {/* <Typography color="text.secondary" variant="body2">
+              <>
+                {/* <Typography color="text.secondary" variant="body2">
                 Selected Image: {selectedImage.name}
               </Typography> */}
 
-              <Button fullWidth variant="text" onClick={()=>handleUpload(row.original._id)}>
-                Upload 
-              </Button>
-            </>
-          )}
+                <Button fullWidth variant="text" onClick={() => handleUpload(row.original._id)}>
+                  Upload
+                </Button>
+              </>
+            )}
             {row.original.productImages.map((image) => (
               <ImageListItem key={image}>
                 <img
@@ -455,6 +492,8 @@ const ProductDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+            {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}
@@ -520,8 +559,8 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     // }
     onSubmit(values);
     onClose();
-    setValues(null)
-    setSelectedImages([])
+    setValues(null);
+    setSelectedImages([]);
     //  window.location.reload(true);
   };
 

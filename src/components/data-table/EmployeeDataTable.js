@@ -30,7 +30,19 @@ import { ExportToCsv } from 'export-to-csv';
 import { selectCurrentToken, selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { useSelector } from 'react-redux';
 import useAxios from '../../api/axios';
-import { ADMIN, AVAILABLE_STORES_URL, BANK_AGENT, BASE_URL, STORE_EMPLOYEE, STORE_MANAGER, USERS_URL } from '../../Constants';
+import {
+  ADMIN,
+  AVAILABLE_STORES_URL,
+  BANK_AGENT,
+  BASE_URL,
+  STORE_EMPLOYEE,
+  STORE_MANAGER,
+  USERS_URL,
+} from '../../Constants';
+import AlertDialog from './AlertDialog';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const userImage = require('./avatar_1.jpg');
 
 const UserDataTable = () => {
@@ -38,6 +50,7 @@ const UserDataTable = () => {
   const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -45,7 +58,7 @@ const UserDataTable = () => {
   const getUsers = async () => {
     try {
       const response = await api.get(`${USERS_URL}/store/${user.store}`);
-            if (!response?.data) throw Error('no data found');
+      if (!response?.data) throw Error('no data found');
       const users = response.data;
       console.log(users);
       setData(users);
@@ -54,15 +67,29 @@ const UserDataTable = () => {
     }
   };
   const deleteUser = async (id) => {
-    await api.delete(`${USERS_URL}/${id}`);
-    await getUsers();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${USERS_URL}/${id}`);
+      await getUsers();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const updateUser = async (values) => {
-    await api.put(USERS_URL, values);
+    try {
+      const response = await api.put(USERS_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const createUser = async (values) => {
-    const response = await api.post(USERS_URL, values);
+    try {
+      const response = await api.post(USERS_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   useEffect(() => {
     getUsers();
@@ -72,15 +99,23 @@ const UserDataTable = () => {
     setTableData(data);
   }, [data]);
 
+  const handleApiResponse = (response) => {
+    console.log(response);
+    if (response.status === 201 || response.status === 200) {
+      toast.success('operation successfully completed');
+    } else {
+      toast.error('Error occured');
+    }
+  };
+
   const handleCreateNewRow = async (values) => {
-    console.log(values)
+    console.log(values);
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
-    formData.append("storeId",user.store)
+    formData.append('storeId', user.store);
     console.log(formData);
     await createUser(formData);
     getUsers();
-
   };
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
@@ -103,11 +138,24 @@ const UserDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('_id')}`)) {
-        return;
-      }
+      // if (!window.confirm(`Are you sure you want to delete ${row.getValue('_id')}`)) {
+      //   return;
+      // }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteUser(row.getValue('_id'));
+      setModalContent({
+        title: 'Delete Employee',
+        content: 'Are you sure you want to delete this employe?',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteUser(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
     },
     [tableData]
   );
@@ -223,7 +271,7 @@ const UserDataTable = () => {
         accessorKey: 'email', //simple recommended way to define a column
         header: 'Email',
       },
-  
+
       {
         accessorKey: 'roles', //simple recommended way to define a column
         header: 'Roles',
@@ -280,7 +328,7 @@ const UserDataTable = () => {
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h4">Signature Catch Phrase: </Typography>
             <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
-            <img src='./id.jpeg'/>
+            <img src="./id.jpeg" />
           </Box>
         </Box>
       )}
@@ -342,6 +390,8 @@ const UserDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+            {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}
@@ -359,9 +409,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
   const handleButtonClick = () => {
     ImageInput.current.click();
   };
-  const getAvailableStores = async()=>{
-
-  }
+  const getAvailableStores = async () => {};
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'image/png') {
@@ -372,7 +420,6 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
       alert('Please select a valid PNG file');
     }
   };
-
 
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
@@ -385,10 +432,10 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     //put your validation logic here
     //change role string to table
-    const roles =[];
+    const roles = [];
     roles.push(values.roles);
-    values.roles=roles;
-    console.log(values)
+    values.roles = roles;
+    console.log(values);
     onSubmit(values);
     onClose();
   };
@@ -423,7 +470,6 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
               .filter((column) => {
                 if (column.accessorKey == '_id') return false;
                 else if (column.accessorKey == 'avatar') return false;
-
                 else if (column.id == 'createdAt') return false;
                 else if (column.id == 'roles') return false;
                 else if (column.id == 'name') return false;
@@ -449,9 +495,10 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
                   setSelectedOption(e.target.value);
                   setValues({ ...values, [e.target.name]: e.target.value });
                 }}
-              > 
-              <MenuItem selected value={STORE_EMPLOYEE}>Store Employee </MenuItem>
-
+              >
+                <MenuItem selected value={STORE_EMPLOYEE}>
+                  Store Employee{' '}
+                </MenuItem>
               </Select>
             </FormControl>
             <TextField

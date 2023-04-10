@@ -1,8 +1,7 @@
 // component
-import SvgColor from '../../../components/svg-color';
 // ----------------------------------------------------------------------
 
-const icon = (name) => <img src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />;
+const icon = (name) => <img src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} alt="avatar" />;
 
 
 const navConfigAdmin = [
@@ -24,6 +23,11 @@ const navConfigAdmin = [
   {
     title: 'Companies',
     path: '/dashboard/company',
+    icon: icon('ic_user'),
+  },
+  {
+    title: 'Chat',
+    path: '/dashboard/chat',
     icon: icon('ic_user'),
   },
   {

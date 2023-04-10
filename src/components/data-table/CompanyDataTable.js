@@ -31,11 +31,17 @@ import { ExportToCsv } from 'export-to-csv';
 import useAxios from '../../api/axios';
 import { BASE_URL, COMPANIES_URL } from '../../Constants';
 import { number } from 'prop-types';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AlertDialog from './AlertDialog';
+
 const companyImage = require('./avatar_1.jpg');
 
 const CompanyDataTable = () => {
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -53,15 +59,29 @@ const CompanyDataTable = () => {
   };
 
   const deleteCompany = async (id) => {
-    await api.delete(`${COMPANIES_URL}/${id}`);
-    await getCompanies();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${COMPANIES_URL}/${id}`);
+      await getCompanies();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const updateCompany = async (values) => {
-    await api.put(COMPANIES_URL, values);
+    try {
+      const response = await api.put(COMPANIES_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const createCompany = async (values) => {
-    const response = await api.post(COMPANIES_URL, values);
+    try {
+      const response = await api.post(COMPANIES_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   useEffect(() => {
     getCompanies();
@@ -70,6 +90,16 @@ const CompanyDataTable = () => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  // toast notification functions
+  const handleApiResponse = (response) => {
+    if (response.status === 201 ||response.status === 200 ) {
+      console.log(response.data);
+      toast.success('operation successfully completed');
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
@@ -102,11 +132,25 @@ const CompanyDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('companyLabel')}`)) {
-        return;
-      }
+      // if (!window.confirm(`Are you sure you want to delete ${row.getValue('companyLabel')}`)) {
+      //   return;
+      // }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteCompany(row.getValue('_id'));
+      setModalContent({
+        title: 'Delete Company',
+        content:
+          'Are you sure you want to delete this company? Please note that deleting this company will also delete all the stores associated with it',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteCompany(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
     },
     [tableData]
   );
@@ -251,7 +295,6 @@ const CompanyDataTable = () => {
                 </tr>
               ))}
           </table> */}
-
         </>
         // <Box
         //   sx={{
@@ -335,6 +378,8 @@ const CompanyDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+             {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}

@@ -29,6 +29,8 @@ import StoreEmployeePage from './pages/StoreManager/StoreEmployeePage';
 import CompanyPage from './pages/Adminstrator/CompanyPage';
 import CategoryPage from './pages/StoreManager/CategoryPage';
 import BrandPage from './pages/StoreManager/BrandPage';
+import Chat from './pages/Adminstrator/Chat';
+import CreditApplication from './pages/BankAgent/CreditApplicationPage';
 
 // import RequireAuth from './components/RequireAuth';
 
@@ -79,6 +81,8 @@ export default function Router() {
             { path: 'store', element: <StorePage /> },
             { path: 'company', element: <CompanyPage /> },
             { path: 'adminProfile', element: <AdminProfile /> },
+            { path: 'chat', element: <Chat /> },
+            // { path: 'chat', element: <Chat /> },
             // { path: 'bank', element: <BankDashboardAppPage /> },
             // { path: 'product', element: <ProductPage /> },
             // { path: 'products', element: <ProductsPage /> },
@@ -99,14 +103,10 @@ export default function Router() {
           children: [
             { element: <Navigate to="/dashboard/bank" />, index: true },
             { path: 'bank', element: <BankDashboardAppPage /> },
+            { path: 'credits', element: <CreditApplication/> },
             { path: 'bankprofile', element: <BankProfile/> },
-            // { path: 'user', element: <UserPage /> },
+           
 
-            // { path: 'user', element: <UserPage /> },
-            // { path: 'product', element: <ProductPage /> },
-            // { path: 'products', element: <ProductsPage /> },
-            // { path: 'blog', element: <BlogPage /> },
-            // { path: 'blog', element: <BlogPage /> },
           ],
         },
       ],

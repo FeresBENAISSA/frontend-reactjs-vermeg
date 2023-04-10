@@ -14,7 +14,8 @@ import {
   Brush,
   Monitor,
   BikeScooter,
-  PersonalVideo,DesktopWindows
+  PersonalVideo,
+  DesktopWindows,
 } from '@mui/icons-material';
 
 //Material-UI Imports
@@ -42,10 +43,14 @@ import useAxios from '../../api/axios';
 import { CATEGORY_URL } from '../../Constants';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../redux/features/auth/authSlice';
+import AlertDialog from './AlertDialog';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const CategoryDataTable = () => {
   const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -63,16 +68,29 @@ const CategoryDataTable = () => {
   };
 
   const deleteCategory = async (id) => {
-    await api.delete(`${CATEGORY_URL}/${id}`);
-    await getCategories();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${CATEGORY_URL}/${id}`);
+      await getCategories();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const updateCategory = async (values) => {
-    await api.put(CATEGORY_URL, values);
+    try {
+      const response = await api.put(CATEGORY_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const createCategory = async (values) => {
-    console.log(values);
-    const response = await api.post(CATEGORY_URL, values);
+    try {
+      const response = await api.post(CATEGORY_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
 
   useEffect(() => {
@@ -82,6 +100,15 @@ const CategoryDataTable = () => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  const handleApiResponse = (response) => {
+    console.log(response)
+    if (response.status === 201 ||response.status === 200) {
+      toast.success('operation successfully completed');
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
@@ -115,11 +142,25 @@ const CategoryDataTable = () => {
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('storeLabel')}`)) {
-        return;
-      }
+      // if (!window.confirm(`Are you sure you want to delete ${row.getValue('storeLabel')}`)) {
+      //   return;
+      // }
       //send api delete request here, then refetch or update local table data for re-render
-      deleteCategory(row.getValue('_id'));
+
+      setModalContent({
+        title: 'Delete Category',
+        content: 'Are you sure you want to delete this category?',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteCategory(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
     },
     [tableData]
   );
@@ -264,6 +305,8 @@ const CategoryDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+             {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}

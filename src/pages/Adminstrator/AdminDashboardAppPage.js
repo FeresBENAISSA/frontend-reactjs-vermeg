@@ -20,15 +20,28 @@ import {
 // import BasicDetailPanels from 'src/components/data-table/dataTable';
 // import Example from './../../components/data-table/dataTablev2';
 import { useSelector } from 'react-redux';
-import { selectCurrentEmail, selectCurrentToken, selectCurrentUser } from '../../redux/features/auth/authSlice';
+import { selectCurrentUser } from '../../redux/features/auth/authSlice';
+import useAxios from '../../api/axios';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
 // ----------------------------------------------------------------------
 
 export default function AdminDashboardAppPage() {
   const theme = useTheme();
   const user = useSelector(selectCurrentUser);
-  const token = useSelector(selectCurrentToken);
-  const welcome = user.firstname ? `welcome ${user.firstname}` : ' Hi, Welcome back';
+  const welcome = user.firstname ? `welcome ${user.firstname} ${user.lastname}` : ' Hi, Welcome back';
+  const api = useAxios();
+  const [stats,setStats]=useState();
+  const getStats =async(req,res)=>{
+    const stats = await api('api/stats/all');
+    console.log(stats)
+  }
+  useEffect(()=>{
+    getStats()
+  },[])
+
+
   return (
     <>
       <Helmet>
@@ -42,27 +55,49 @@ export default function AdminDashboardAppPage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Weekly Sales" total={714000} icon={'ant-design:android-filled'} />
+            <AppWidgetSummary title="Total companies" total={714000} icon={'mdi:company'} />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="New Users" total={1352831} color="info" icon={'ant-design:apple-filled'} />
+            <AppWidgetSummary title="Total stores" total={1352831} color="info" icon={'streamline:shopping-store-1-store-shop-shops-stores'} />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Item Orders" total={1723315} color="warning" icon={'ant-design:windows-filled'} />
+            <AppWidgetSummary title="Total users" total={1723315} color="warning" icon={'mdi:users-group'} />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Bug Reports" total={234} color="error" icon={'ant-design:bug-filled'} />
+            <AppWidgetSummary title="Total credit applications" total={714000} color="error" icon={'mdi:form-outline'} />
           </Grid>
-          {/* <Grid item xs={12} md={12} lg={12}>
-            <BasicDetailPanels />
-          </Grid> */}
-          {/* <Grid item xs={12} md={12} lg={12}>
-            <Example />
-          </Grid> */}
-          <Grid item xs={12} md={6} lg={8}>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppWebsiteVisits
+              title="Credit Application By Month (2023)"
+              subheader="(+43%) than last year"
+              chartLabels={[
+                '01/01/2023',
+                '02/01/2023',
+                '03/01/2023',
+                '04/01/2023',
+                '05/01/2023',
+                '06/01/2023',
+                '07/01/2023',
+                '08/01/2023',
+                '09/01/2023',
+                '10/01/2023',
+                '11/01/2023',
+                '12/01/2023',
+              ]}
+              chartData={[
+                {
+                  name: 'Team A',
+                  type: 'column',
+                  fill: 'solid',
+                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30,86],
+                },
+              ]}
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={6}>
             <AppWebsiteVisits
               title="Website Visits"
               subheader="(+43%) than last year"
@@ -78,67 +113,58 @@ export default function AdminDashboardAppPage() {
                 '09/01/2003',
                 '10/01/2003',
                 '11/01/2003',
+                '12/01/2003',
               ]}
               chartData={[
-                {
-                  name: 'Team A',
-                  type: 'column',
-                  fill: 'solid',
-                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                },
+                // {
+                //   name: 'Team A',
+                //   type: 'column',
+                //   fill: 'solid',
+                //   data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30,86],
+                // },
                 {
                   name: 'Team B',
                   type: 'area',
                   fill: 'gradient',
-                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
+                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43,87],
                 },
                 {
                   name: 'Team C',
                   type: 'line',
                   fill: 'solid',
-                  data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
+                  data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39,78],
                 },
               ]}
             />
           </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppCurrentVisits
-              title="Current Visits"
-              chartData={[
-                { label: 'America', value: 4344 },
-                { label: 'Asia', value: 5435 },
-                { label: 'Europe', value: 1443 },
-                { label: 'Africa', value: 4443 },
-              ]}
-              chartColors={[
-                theme.palette.primary.main,
-                theme.palette.info.main,
-                theme.palette.warning.main,
-                theme.palette.error.main,
-              ]}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
+          
+          <Grid item xs={12} md={6} lg={6}>
             <AppConversionRates
-              title="Conversion Rates"
+              title="Top 5 stores "
               subheader="(+43%) than last year"
               chartData={[
-                { label: 'Italy', value: 400 },
-                { label: 'Japan', value: 430 },
-                { label: 'China', value: 448 },
-                { label: 'Canada', value: 470 },
-                { label: 'France', value: 540 },
-                { label: 'Germany', value: 580 },
-                { label: 'South Korea', value: 690 },
-                { label: 'Netherlands', value: 1100 },
-                { label: 'United States', value: 1200 },
-                { label: 'United Kingdom', value: 1380 },
+                { label: 'Store 1', value: 400 },
+                { label: 'Store 2', value: 430 },
+                { label: 'Store 3', value: 448 },
+                { label: 'Store 4', value: 470 },
+                { label: 'Store 5', value: 540 },
+              ]}
+            />
+
+          </Grid>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Top 5 companies"
+              subheader="(+43%) than last year"
+              chartData={[
+                { label: 'Company 1', value: 400 },
+                { label: 'Company 2', value: 430 },
+                { label: 'Company 3', value: 448 },
+                { label: 'Company 4', value: 470 },
+                { label: 'Company 5', value: 540 },
               ]}
             />
           </Grid>
-
           <Grid item xs={12} md={6} lg={4}>
             <AppCurrentSubject
               title="Current Subject"
@@ -149,6 +175,21 @@ export default function AdminDashboardAppPage() {
                 { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
               ]}
               chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={4}>
+            <AppCurrentVisits
+              title="Credit application stats"
+              chartData={[
+                { label: 'Approuved', value: 4344 },
+                { label: 'Waiting', value: 5435 },
+                { label: 'Denied', value: 1443 },
+              ]}
+              chartColors={[
+                theme.palette.success.main,
+                theme.palette.warning.main,
+                theme.palette.error.main,
+              ]}
             />
           </Grid>
 

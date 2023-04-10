@@ -1,20 +1,16 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-
 //MRT Imports
 import MaterialReactTable from 'material-react-table';
 import { Delete, Edit } from '@mui/icons-material';
-
 //Material-UI Imports
 import {
   Box,
   Button,
-  ListItemIcon,
   MenuItem,
   Typography,
   TextField,
   Tooltip,
   IconButton,
-  Alert,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,16 +23,19 @@ import {
 
 import { ExportToCsv } from 'export-to-csv';
 // import API
-import { selectCurrentToken } from '../../redux/features/auth/authSlice';
-import { useSelector } from 'react-redux';
+
 import useAxios from '../../api/axios';
-import { ADMIN, AVAILABLE_STORES_URL, BANK_AGENT, BASE_URL, STORE_MANAGER, USERS_URL } from '../../Constants';
+import { ADMIN, AUTH_KEY, AVAILABLE_STORES_URL, BANK_AGENT, BASE_URL, STORE_MANAGER, USERS_URL } from '../../Constants';
+import { CometChat } from '@cometchat-pro/chat';
+import AlertDialog from './AlertDialog';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const userImage = require('./avatar_1.jpg');
 
 const UserDataTable = () => {
-  const token = useSelector(selectCurrentToken);
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -52,16 +51,61 @@ const UserDataTable = () => {
       console.log(error);
     }
   };
+
   const deleteUser = async (id) => {
-    await api.delete(`${USERS_URL}/${id}`);
-    await getUsers();
-    alert('deleted succefuly');
+    try {
+      const response = await api.delete(`${USERS_URL}/${id}`);
+      await getUsers();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   const updateUser = async (values) => {
-    await api.put(USERS_URL, values);
+    try {
+      const response = await api.put(USERS_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
+  // const getUserByEmail = async (email)=>{
+  //   const response = await api.get(`${USERS_URL}/${email}`);
+  //   return response.data
+  // }
+
   const createUser = async (values) => {
-    const response = await api.post(USERS_URL, values);
+    try {
+      const response = await api.post(USERS_URL, values);
+      const userDb = response.data;
+      if (response.data) {
+        var UID = userDb._id;
+        var name = userDb.firstname;
+        var avatar = BASE_URL + userDb.avatar.split('\\')[1];
+        var user = new CometChat.User(UID);
+        user.setName(name);
+        if (avatar) user.setAvatar(avatar);
+        console.log(userDb);
+        console.log(userDb.roles.includes('ADMIN'));
+
+        if (userDb.roles.includes('ADMIN')) {
+          CometChat.createUser(user, AUTH_KEY).then(
+            (user) => {
+              console.log('user created', user);
+            },
+            (error) => {
+              console.log('error', error);
+            }
+          );
+        }
+      } else {
+        console.log('no');
+      }
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
+    // var user
   };
   useEffect(() => {
     getUsers();
@@ -70,6 +114,15 @@ const UserDataTable = () => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  const handleApiResponse = (response) => {
+    console.log(response);
+    if (response.status === 201 || response.status === 200) {
+      toast.success('operation successfully completed');
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   const handleCreateNewRow = async (values) => {
     console.log(values);
@@ -82,7 +135,7 @@ const UserDataTable = () => {
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
-      const roles = [];
+      // const roles = [];
       console.log(values);
       tableData[row.index] = values;
       //roles from string to table
@@ -94,9 +147,9 @@ const UserDataTable = () => {
     }
   };
 
-  const handleCancelRowEdits = () => {
-    setValidationErrors({});
-  };
+  // const handleCancelRowEdits = () => {
+  //   setValidationErrors({});
+  // };
 
   const handleDeleteRow = useCallback(
     (row) => {
@@ -246,7 +299,7 @@ const UserDataTable = () => {
   };
 
   const csvExporter = new ExportToCsv(csvOptions);
-  let content;
+  // let content;
   // if (isLoading) return <p>is Loading </p>;
   // else if (isSuccess)
   return (
@@ -307,9 +360,9 @@ const UserDataTable = () => {
           csvExporter.generateCsv(rows.map((row) => row.original));
         };
 
-        const handleExportData = () => {
-          csvExporter.generateCsv(data);
-        };
+        // const handleExportData = () => {
+        //   csvExporter.generateCsv(data);
+        // };
 
         return (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -339,6 +392,8 @@ const UserDataTable = () => {
               onClose={() => setCreateModalOpen(false)}
               onSubmit={handleCreateNewRow}
             />
+            {modalContent && <AlertDialog {...modalContent} />}
+            <ToastContainer position="bottom-right" />
           </div>
         );
       }}
@@ -356,7 +411,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
   const handleButtonClick = () => {
     ImageInput.current.click();
   };
-  const getAvailableStores = async () => {};
+  // const getAvailableStores = async () => {};
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'image/png') {
@@ -427,16 +482,16 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
             /> */}
             {columns
               .filter((column) => {
-                if (column.accessorKey == '_id') return false;
-                else if (column.accessorKey == 'avatar') return false;
-                else if (column.id == 'createdAt') return false;
-                else if (column.id == 'roles') return false;
-                else if (column.id == 'name') return false;
+                if (column.accessorKey === '_id') return false;
+                else if (column.accessorKey === 'avatar') return false;
+                else if (column.id === 'createdAt') return false;
+                else if (column.id === 'roles') return false;
+                else if (column.id === 'name') return false;
                 else return true;
               })
               .map((column) => (
                 <TextField
-                  key={column.accessorKey == '' ? column.accessorKey : column.id}
+                  key={column.accessorKey === '' ? column.accessorKey : column.id}
                   label={column.header}
                   name={column.accessorKey !== '' ? column.accessorKey : column.id}
                   type={column.type}

@@ -7,25 +7,19 @@ import { Container, Stack, Typography, Grid } from '@mui/material/';
 import AccountProfile from '../../sections/@dashboard/account/AccountProfile';
 import { AccountProfileDetails } from '../../sections/@dashboard/account/AccountProfileDetails';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectCurrentEmail, selectCurrentUser, updateUserAvatar } from '../../redux/features/auth/authSlice';
+import {  selectCurrentUser, updateUserAvatar } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
 import { USERS_URL } from '../../Constants';
 
 // ----------------------------------------------------------------------
 
 export default function ManagerProfile() {
-  const email = useSelector(selectCurrentEmail);
   // const baseuser = useSelector(selectCurrentUser);
   const userExist = useSelector(selectCurrentUser);
   const [user, setUser] = useState(userExist);
   const api = useAxios();
   const dispatch = useDispatch();
 
-  // const getUserByEmail = async (email) => {
-  //   const response = await api.get(`/api/users/${email}`);
-  //   console.log(response);
-  //   setUser(response.data.user);
-  // };
 
   const getCurrentUser = async () => {
     const response = await api.get(`/api/users/current`);

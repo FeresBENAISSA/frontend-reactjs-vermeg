@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Box, Divider, Typography, Stack, MenuItem, Avatar, IconButton, Popover } from '@mui/material';
 // mocks_
-import account from '../../../_mock/account';
-import { logOut, selectCurrentEmail, selectCurrentUser, selectCurrentUsername } from '../../../redux/features/auth/authSlice';
-import axios from '../../../api/axios';
+import { logOut,  selectCurrentUser } from '../../../redux/features/auth/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLogoutMutation } from '../../../redux/features/auth/authApiSlice';
 import * as Constants from "./../../../Constants/constants"
+import { CometChat } from '@cometchat-pro/chat';
+
 // ----------------------------------------------------------------------
 
 const MENU_OPTIONS = [
@@ -32,23 +32,26 @@ export default function AccountPopover() {
   const [open, setOpen] = useState(null);
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser)
-  const [userDb,setUserDb]=useState(user);
   
   // const username = useSelector(selectCurrentUsername)
   const [logout]= useLogoutMutation();
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
   };
-
+ 
   const handleClose = async () => {
     // const response =await axios.post('/logout',{ withCredentials: true });
    
     setOpen(null);
   };
   const handleLogOut =async()=>{
+    
     logout()
     // console.log(response)
     dispatch(logOut());
+    CometChat.logout();
+        
+    
   }
   return (
     <>

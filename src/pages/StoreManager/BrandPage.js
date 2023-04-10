@@ -1,13 +1,7 @@
 import { Helmet } from 'react-helmet-async';
-import { filter } from 'lodash';
-import { sentenceCase } from 'change-case';
-import { useEffect, useState } from 'react';
-import Modal from '@mui/material/Modal/';
-
 // @mui
 import { Card, Stack, Container, Typography } from '@mui/material';
 // components
-import CategoryDataTable from '../../components/data-table/CategoryDataTable';
 import BrandDataTable from '../../components/data-table/BrandDataTable';
 
 // ----------------------------------------------------------------------

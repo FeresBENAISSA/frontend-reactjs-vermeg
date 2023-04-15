@@ -12,10 +12,12 @@ import { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { persistor, store } from './redux/store';
 // import { AuthProvider } from './context/AuthProvider';
-
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
 // ----------------------------------------------------------------------
 import { CometChat } from '@cometchat-pro/chat';
 import { APP_ID, REGION } from './Constants';
+import { PersistGate } from 'redux-persist/integration/react';
 
 
   const appSetting = new CometChat.AppSettingsBuilder().subscribePresenceForAllUsers().setRegion(REGION).build();
@@ -33,16 +35,18 @@ import { APP_ID, REGION } from './Constants';
 
 export default function App() {
   const [auth, setAuth] = useState('');
- 
+  //  const persistor = persistStore(store);
+
   
   return (
     <ThemeProvider>
       <ScrollToTop />
       <StyledChart />
       <Provider store={store}>
-        {/* <PersistGate loading={null} persistor={persistor}> */}
+        {/* without persist gate */}
+        <PersistGate loading={null} persistor={persistor}>
           <Router />
-        {/* </PersistGate> */}
+        </PersistGate>
       </Provider>
     </ThemeProvider>
   );

@@ -92,7 +92,7 @@ export default function NotificationsPopover() {
     // setNotifications(notifications)
   };
   const countUnreadNotifications = () => {
-    var count = 0;
+    var count = 0; 
     notifications.map((notification) => {
       if (notification.isUnRead === true) count++;
     });

@@ -56,31 +56,24 @@ const CreditApplicationDataTable = () => {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    getCredits();
-  }, []);
-
-  useEffect(() => {
-    setTableData(data);
-  }, [data]);
-
   const updateApprouve = async (row, comment) => {
     const values = {};
-    values.id = row.original._id;
+    values.creditId = row.original._id;
     values.bankAgentId = user._id;
     values.comment = comment;
     try {
       const response = await api.put(`${CREDITS_URL}/waitingforsignature`, values);
+      console.log(response)
       handleApiResponse(response);
       getCredits();
     } catch (error) {
       toast.error('Failed ');
     }
   };
+  
   const updateReject = async (row, comment) => {
     const values = {};
-    values.id = row.original._id;
+    values.creditId = row.original._id;
     values.comment = comment;
     console.log(values);
     try {
@@ -92,12 +85,20 @@ const CreditApplicationDataTable = () => {
     }
   };
 
+  useEffect(() => {
+    getCredits();
+  }, []);
+
+  useEffect(() => {
+    setTableData(data);
+  }, [data]);
+
   // toast notification functions
   const handleApiResponse = (response) => {
     if (response.status === 201) {
       toast.success(response.data);
     } else {
-      toast.error("Error occured");
+      toast.error('Error occured');
     }
   };
 
@@ -288,7 +289,7 @@ const CreditApplicationDataTable = () => {
             </Tooltip>
             <Tooltip arrow placement="right" title="Delete">
               <IconButton
-                disabled={row.original.state === 'REJECTED' ? true : false}
+                disabled={row.original.state === 'REJECTED' ||row.original.state === 'WAITING_FOR_SIGNATURE' || row.original.state === 'SIGNED'? true : false}
                 color="error"
                 onClick={() => denyCreditApplication(row)}
               >
@@ -322,9 +323,7 @@ const CreditApplicationDataTable = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar> */}
-      <ToastContainer
-        position="bottom-right"
-      />
+      <ToastContainer position="bottom-right" />
     </div>
   );
 };

@@ -11,6 +11,8 @@ import Searchbar from './Searchbar';
 import AccountPopover from './AccountPopover';
 // import LanguagePopover from './LanguagePopover';
 import NotificationsPopover from './NotificationsPopover';
+import { useSelector } from 'react-redux';
+import { selectCurrentRoles } from '../../../redux/features/auth/authSlice';
 
 // ----------------------------------------------------------------------
 
@@ -43,6 +45,8 @@ Header.propTypes = {
 };
 
 export default function Header({ onOpenNav }) {
+  const currentRole = useSelector(selectCurrentRoles);
+  
   return (
     <StyledRoot>
       <StyledToolbar>
@@ -69,7 +73,7 @@ export default function Header({ onOpenNav }) {
           }}
         >
           {/* <LanguagePopover /> */}
-          <NotificationsPopover />
+          {currentRole.includes('BANK_AGENT') ? <NotificationsPopover /> : null}
           <AccountPopover />
         </Stack>
       </StyledToolbar>

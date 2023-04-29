@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
 // @mui
 import { useTheme } from '@mui/material/styles';
-import { Grid, Container, Typography } from '@mui/material';
+import { Grid, Container, Typography, Card, CardHeader, Box, Switch, Stack } from '@mui/material';
 // components
 import Iconify from '../../components/iconify';
 // sections
@@ -21,21 +21,121 @@ import {
 // import Example from './../../components/data-table/dataTablev2';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../redux/features/auth/authSlice';
+import { useEffect, useState } from 'react';
+import { STATS_URL } from '../../Constants';
+import useAxios from '../../api/axios';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 // import useAxios from '../../api/axios';
-
 
 // ----------------------------------------------------------------------
 
 export default function DashboardAppPage() {
-  const theme = useTheme();
   const user = useSelector(selectCurrentUser);
   const welcome = user.firstname ? `welcome ${user.firstname}` : ' Hi, Welcome back';
+  const api = useAxios();
+  const current = new Date().getFullYear();
+  const [revenueAndProfitYear, setRevenueAndProfitYear] = useState(`${current}`);
+  const [revenueAndProfit, setRevenueAndProfit] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topCategories, setTopCategories] = useState([]);
+  const [topBrands, setTopBrands] = useState([]);
+  const [topEmployees, setTopEmployees] = useState([]);
+  const [avgWaitingPeriod, setAvgWaitingPeriod] = useState();
+  const [avgCreditAmount, setAvgCreditAmount] = useState();
+  const [checked, setChecked] = useState(true);
 
+
+
+
+  
+  const getTopProductsByStore = async () => {
+    const object = {
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/top-products-by-store`, object);
+    setTopProducts(response.data);
+  };
+
+  const getTopCategoriesByStore = async () => {
+    const object = {
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/top-categories-by-store`, object);
+    setTopCategories(response.data);
+  };
+  const getTopBrandsByStore = async () => {
+    const object = {
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/top-brands-by-store`, object);
+    console.log(response.data)
+    setTopBrands(response.data);
+  };
+  const getTopEmployeesByStore = async () => {
+    const object = {
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/top-employees-by-store`, object);
+    setTopEmployees(response.data);
+  };
+  const handleChangeYearForRevenueAndProfit = async (values) => {
+    setRevenueAndProfit([]);
+    const object = {
+      date: values.$d,
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/revenue-and-profit-for-store`, object);
+    setRevenueAndProfit(response.data);
+  };
+
+  const handleChangeYearForRevenueAndProfitByWeek = async (values) => {
+    setRevenueAndProfit([]);
+    const object = {
+      date: values.$d,
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/revenue-and-profit-for-store-by-week`, object);
+    console.log(response)
+    setRevenueAndProfit(response.data);
+  };
+
+
+
+  const averageWaitingPeriode = async () => {
+    const object = {
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/average-waiting-periode-for-store`, object);
+    setAvgWaitingPeriod(response.data);
+  };
+  const averageCreditAmount = async () => {
+    const object = {
+      storeId: user.store,
+    };
+    const response = await api.post(`${STATS_URL}/average-credit-amount-for-store`, object);
+    setAvgCreditAmount(response.data);
+  };
+  const handleChange = (event) => {
+    setChecked(event.target.checked);
+    console.log(event.target.checked)
+    if(event.target.checked===false) handleChangeYearForRevenueAndProfitByWeek({date: new Date() })
+    else handleChangeYearForRevenueAndProfit({date: new Date() })
+  };
+  useEffect(() => {
+    handleChangeYearForRevenueAndProfit({ date: new Date() });
+    getTopProductsByStore();
+    getTopCategoriesByStore();
+    getTopBrandsByStore();
+    getTopEmployeesByStore();
+    averageWaitingPeriode();
+    averageCreditAmount();
+  }, []);
 
   return (
     <>
       <Helmet>
-        <title> Dashboard | Minimal UI </title>
+        <title> Dashboard </title>
       </Helmet>
       <Container maxWidth="xl">
         <Typography variant="h4" sx={{ mb: 5 }}>
@@ -44,67 +144,151 @@ export default function DashboardAppPage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Weekly Sales" total={714000} icon={'ant-design:android-filled'} />
+            <AppWidgetSummary
+              title="Average spending ammount per client"
+              total={avgCreditAmount?.avgCreditAmount ? avgCreditAmount.avgCreditAmount : 0}
+              color="success"
+              icon={'solar:dollar-bold'}
+            />
           </Grid>
-
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="New Users" total={1352831} color="info" icon={'ant-design:apple-filled'} />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Item Orders" total={1723315} color="warning" icon={'ant-design:windows-filled'} />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Bug Reports" total={234} color="error" icon={'ant-design:bug-filled'} />
-          </Grid>
-          {/* <Grid item xs={12} md={12} lg={12}>
-            <BasicDetailPanels />
-          </Grid> */}
-          {/* <Grid item xs={12} md={12} lg={12}>
-            <Example />
-          </Grid> */}
-          <Grid item xs={12} md={6} lg={8}>
-            <AppWebsiteVisits
-              title="Website Visits"
-              subheader="(+43%) than last year"
-              chartLabels={[
-                '01/01/2003',
-                '02/01/2003',
-                '03/01/2003',
-                '04/01/2003',
-                '05/01/2003',
-                '06/01/2003',
-                '07/01/2003',
-                '08/01/2003',
-                '09/01/2003',
-                '10/01/2003',
-                '11/01/2003',
-              ]}
-              chartData={[
-                {
-                  name: 'Team A',
-                  type: 'column',
-                  fill: 'solid',
-                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                },
-                {
-                  name: 'Team B',
-                  type: 'area',
-                  fill: 'gradient',
-                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-                },
-                {
-                  name: 'Team C',
-                  type: 'line',
-                  fill: 'solid',
-                  data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
-                },
-              ]}
+            <AppWidgetSummary
+              title="Average waiting periode in minutes"
+              total={avgWaitingPeriod?.avgWaitingPeriode ? avgWaitingPeriod.avgWaitingPeriode : 0}
+              color="info"
+              icon={'ic:outline-access-time-filled'}
             />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={4}>
+          <Grid item xs={12} sm={6} md={3}>
+            <AppWidgetSummary
+              title="Credit Application count"
+              total={avgCreditAmount?.credits ? avgCreditAmount.credits : 0}
+              color="secondary"
+              icon={'mdi:form-outline'}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <AppWidgetSummary
+              title="Customer satisfaction rate"
+              total={4.7}
+              color="warning"
+              icon={'material-symbols:star-rate-rounded'}
+            />
+          </Grid>
+          <Grid item xs={12} md={12} lg={12}>
+            <Card sx={{ p: 3, mb: 1 }}>
+              <CardHeader
+                title={`Monthly Revenue and Net Profit: [${revenueAndProfitYear}]`}
+                subheader={
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                    {checked?(
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        label="pick a year"
+                        views={['year']}
+                        onChange={(newValue) => {
+                          setRevenueAndProfitYear(newValue.$y);
+                          handleChangeYearForRevenueAndProfit(newValue);
+                        }}
+                      />
+                    </LocalizationProvider>):null}
+
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: 3}}>
+                      <Typography>Weekly</Typography>
+                      <Switch checked={checked} onChange={handleChange}  inputProps={{ 'aria-label': 'controlled' }} />
+                      <Typography>Monthly</Typography>
+                    </Stack>
+                  </Box>
+                }
+              />
+              <AppWebsiteVisits
+                // title={`Monthly Revenue and Net Profit:[${revenueAndProfitYear}]`}
+                // subheader="(+43%) than last year"
+                chartLabels={revenueAndProfit.map((item) => `${item._id.split('/')[0]}/01/${item._id.split('/')[1]}`)}
+                chartData={[
+                  {
+                    name: 'Revenue',
+                    type: 'column',
+                    fill: 'gradient',
+                    data: revenueAndProfit.map((item) => item.revenue),
+                  },
+                  {
+                    name: 'cost',
+                    type: 'column',
+                    fill: 'solid',
+                    data: revenueAndProfit.map((item) => item.cost),
+                    // data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39, 78],
+                  },
+                  {
+                    name: 'Net Profit',
+                    type: 'column',
+                    fill: 'gradient',
+                    data: revenueAndProfit.map((item) => item.netProfit),
+                    // data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43, 87],
+                  },
+                ]}
+              />
+            </Card>
+          </Grid>
+          {/* <Grid item xs={12} md={2} lg={2}>
+            <Card sx={{ p: 3 }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="pick a year"
+                  views={['year']}
+                  onChange={(newValue) => {
+                    setRevenueAndProfitYear(newValue.$y);
+                    handleChangeYearForRevenueAndProfit(newValue);
+                  }}
+                />
+              </LocalizationProvider>
+            </Card>
+          </Grid> */}
+
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Best-Selling Products via Credit Applications"
+              chartData={topProducts.map((product) => ({
+                label: product._id,
+                value: product.totalSold,
+              }))}
+              subheader="(+43%) than last year"
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Best-Selling Brands via Credit Applications    "
+              chartData={topBrands.map((brand) => ({
+                label: brand.title?brand.title:"",
+                value: brand.count,
+              }))}
+              subheader="(+43%) than last year"
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Best-Selling Categories via Credit Applications"
+              chartData={topCategories.map((category) => ({
+                label: category.title,
+                value: category.count,
+              }))}
+              subheader="(+43%) than last year"
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Top-performing Employees "
+              chartData={topEmployees.map((employee) => ({
+                label: employee.firstname + '' + employee.lastname,
+                value: employee.count,
+              }))}
+              subheader="(+43%) than last year"
+            />
+          </Grid>
+
+          {/* <Grid item xs={12} md={6} lg={4}>
             <AppCurrentVisits
               title="Current Visits"
               chartData={[
@@ -121,26 +305,6 @@ export default function DashboardAppPage() {
               ]}
             />
           </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppConversionRates
-              title="Conversion Rates"
-              subheader="(+43%) than last year"
-              chartData={[
-                { label: 'Italy', value: 400 },
-                { label: 'Japan', value: 430 },
-                { label: 'China', value: 448 },
-                { label: 'Canada', value: 470 },
-                { label: 'France', value: 540 },
-                { label: 'Germany', value: 580 },
-                { label: 'South Korea', value: 690 },
-                { label: 'Netherlands', value: 1100 },
-                { label: 'United States', value: 1200 },
-                { label: 'United Kingdom', value: 1380 },
-              ]}
-            />
-          </Grid>
-
           <Grid item xs={12} md={6} lg={4}>
             <AppCurrentSubject
               title="Current Subject"
@@ -224,7 +388,7 @@ export default function DashboardAppPage() {
                 { id: '5', label: 'Sprint Showcase' },
               ]}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Container>
     </>

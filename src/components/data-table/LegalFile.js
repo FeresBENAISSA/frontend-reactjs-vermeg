@@ -27,13 +27,7 @@ const LegalFile = ({ document }) => {
         loading="lazy"
         onClick={() => setToggler(!toggler)}
       />
-      {/* {isOpen && (
-        <Lightbox
-          mainSrc={src}
-          onCloseRequest={handleClick}
-          enableZoom={true}
-        />
-      )} */}
+   
       <div className="lightbox">
         <FsLightbox toggler={toggler} sources={[`http://localhost:5001/api/documents/${document}`]} />
       </div>

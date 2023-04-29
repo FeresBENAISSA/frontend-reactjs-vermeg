@@ -34,7 +34,9 @@ import { selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AlertDialog from './AlertDialog';
-
+import * as yup from 'yup';
+import { useFormik } from 'formik';
+import { CreateNewBrandModal } from '../CreateModals/createNewBrandModal';
 const BrandDataTable = () => {
   const user = useSelector(selectCurrentUser);
   const [data, setData] = useState([]);
@@ -77,7 +79,7 @@ const BrandDataTable = () => {
   const createBrand = async (values) => {
     try {
       const response = await api.post(BRANDS_URL, values);
-      console.log(response)
+      console.log(response);
       handleApiResponse(response);
     } catch (error) {
       toast.error('Failed');
@@ -353,11 +355,11 @@ const BrandDataTable = () => {
             >
               Delete selected
             </Button>
-            <CreateNewUserModal
+            <CreateNewBrandModal
               columns={columns}
               open={createModalOpen}
               onClose={() => setCreateModalOpen(false)}
-              onSubmit={handleCreateNewRow}
+              onSubmitModal={handleCreateNewRow}
             />
             {modalContent && <AlertDialog {...modalContent} />}
             <ToastContainer position="bottom-right" />
@@ -368,129 +370,144 @@ const BrandDataTable = () => {
   );
 };
 
-export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
-  // const [addProduct] = useAddProductMutation();
-  const ImageInput = useRef();
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [companies, setCompanies] = useState([]);
-  const user = useSelector(selectCurrentUser);
-  const api = useAxios();
+// export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) => {
+//   // const [addProduct] = useAddProductMutation();
+//   const ImageInput = useRef();
+//   const [selectedImage, setSelectedImage] = useState(null);
+//   const [companies, setCompanies] = useState([]);
+//   const user = useSelector(selectCurrentUser);
+//   const api = useAxios();
+//   const brandSchema = yup.object().shape({
+//     title: yup.string().required('Required'),
+//     description: yup.string().required('Required'),
+//     brandLogo: yup.mixed().required('Required'),
+//   });
+//   useEffect(() => {
+//     api
+//       .get('/api/companies')
+//       .then((response) => {
+//         setCompanies(response.data);
+//       })
+//       .catch((error) => {
+//         console.error(error);
+//       });
+//   }, []);
 
-  useEffect(() => {
-    api
-      .get('/api/companies')
-      .then((response) => {
-        setCompanies(response.data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
+//   const handleButtonClick = () => {
+//     ImageInput.current.click();
+//   };
 
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
+//   const handleImageSelect = (event) => {
+//     const file = event.target.files[0];
+//     if (file && file.type === 'image/png') {
+//       setSelectedImage(file);
+//       setFieldValue('brandLogo', file);
+//     } else {
+//       setSelectedImage(null);
+//       alert('Please select a valid PNG file');
+//     }
+//   };
 
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === 'image/png') {
-      setSelectedImage(file);
-      setValues({ ...values, [event.target.name]: file });
-    } else {
-      setSelectedImage(null);
-      alert('Please select a valid PNG file');
-    }
-  };
+//   // const [values, setValues] = useState(() =>
+//   //   columns.reduce((acc, column) => {
+//   //     acc[column.accessorKey ?? ''] = '';
+//   //     return acc;
+//   //   }, {})
+//   // );
+//   const onSubmit = async (values, actions) => {
+//     console.log(values);
+//     console.log(actions);
+//     // this function use the on Sumbit of the modal that will save new brand
 
-  const [values, setValues] = useState(() =>
-    columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = '';
-      return acc;
-    }, {})
-  );
+//     onSubmitModal(values);
+//     onClose();
+//     setSelectedImage(null);
+//     resetForm({
+//       values: {
+//         title: '',
+//         description: '',
+//       },
+//     });
+//   };
+//   const { values, errors, touched, isSubmitting, resetForm, setFieldValue, handleBlur, handleChange, handleSubmit } =
+//     useFormik({
+//       initialValues: {
+//         title: '',
+//         description: '',
+//         brandLogo: null,
+//       },
+//       validationSchema: brandSchema,
+//       onSubmit,
+//     });
+//   return (
+//     <Dialog open={open}>
+//       <DialogTitle textAlign="center">Create New Brand</DialogTitle>
+//       <form autoComplete="off" onSubmit={handleSubmit}>
+//         <DialogContent>
+//           <Stack
+//             sx={{
+//               width: '100%',
+//               minWidth: { xs: '300px', sm: '360px', md: '400px' },
+//               gap: '1.5rem',
+//             }}
+//           >
+//             <TextField
+//               label="Title"
+//               name="title"
+//               onChange={handleChange}
+//               onBlur={handleBlur}
+//               value={values.title}
+//               error={errors.title && touched.title ? true : false}
+//               helperText={errors.title}
+//             />
+//             <TextField
+//               label="Description"
+//               name="description"
+//               value={values.description}
+//               onChange={handleChange}
+//               onBlur={handleBlur}
+//               error={errors.description && touched.description ? true : false}
+//               helperText={errors.description}
+//             />
+         
+//           <input
+//             style={{ display: 'none' }}
+//             accept="image/png"
+//             id="BrandLogo"
+//             onChange={handleImageSelect}
+//             name="brandLogo"
+//             type="file"
+//             ref={ImageInput}
+//             error={errors.brandLogo && touched.brandLogo ? true : false}
+//             helperText={errors.brandLogo}
+//           />
+//           <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
+//             Select Brand Logo
+//           </Button>
+//           {errors.brandLogo ?(<Alert severity="error">{errors.brandLogo}</Alert>):null} 
 
-  const handleSubmit = async (e) => {
-    //put your validation logic here
-    console.log(values);
-    // createProduct(values,token);
-    try {
-      // const response = await addProduct(values).unwrap();
-    } catch (err) {
-      console.log(err);
-    }
-    onSubmit(values);
-    onClose();
-    setSelectedImage(null);
-  };
+//           {selectedImage && (
+//             <>
+//             <Alert severity="success">
+//               <Typography color="text.secondary" variant="body2">
+//                 Selected Image: {selectedImage.name}
+//               </Typography>
+//               </Alert>
+//             </>
+//           )}
+//            </Stack>
+//         </DialogContent>
 
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Brand</DialogTitle>
-
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-
-              gap: '1.5rem',
-            }}
-          >
-            {columns
-              .filter((column) => {
-                if (column.accessorKey == '_id') return false;
-                if (column.accessorKey == 'logo') return false;
-                else if (column.id == 'fullname') return false;
-                else return true;
-              })
-              .map((column) => (
-                <TextField
-                  key={column.accessorKey == '' ? column.accessorKey : column.id}
-                  label={column.header}
-                  name={column.accessorKey !== '' ? column.accessorKey : column.id}
-                  type={column.type}
-                  onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-                />
-              ))}
-          </Stack>
-          <input
-            style={{ display: 'none' }}
-            accept="image/png"
-            id="BrandLogo"
-            onChange={handleImageSelect}
-            name="brandLogo"
-            type="file"
-            ref={ImageInput}
-          />
-          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select Brand Logo
-          </Button>
-          {selectedImage && (
-            <>
-              <Typography color="text.secondary" variant="body2">
-                Selected Image: {selectedImage.name}
-              </Typography>
-
-              {/* <Button fullWidth variant="text" onClick={handleUpload}>
-                Upload
-              </Button> */}
-            </>
-          )}
-        </form>
-      </DialogContent>
-
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancel</Button>
-
-        <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New Brand
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
+//         <DialogActions sx={{ p: '1.25rem' }}>
+//           <Button onClick={onClose}>Cancel</Button>
+//           <Button color="secondary" type="submit" variant="contained" disabled={isSubmitting}>
+//             Create New Brand
+//           </Button>
+//         </DialogActions>
+//       </form>
+//     </Dialog>
+//   );
+// };
 const validateRequired = (value) => !!value.length;
 
 export default BrandDataTable;

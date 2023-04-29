@@ -26,6 +26,7 @@ import { fToNow } from '../../../utils/formatTime';
 import Iconify from '../../../components/iconify';
 import Scrollbar from '../../../components/scrollbar';
 import useAxios from '../../../api/axios';
+import { Link } from 'react-router-dom';
 
 // ----------------------------------------------------------------------
 
@@ -78,26 +79,27 @@ const NOTIFICATIONS = [
 ];
 
 export default function NotificationsPopover() {
-  const [notifications, setNotifications] = useState(NOTIFICATIONS);
-  const [totalUnRead, setTotalUnRead] = useState(null);
-  // const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
+  const [notifications, setNotifications] = useState([]);
+  // const [totalUnRead, setTotalUnRead] = useState(null);
+  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
   const api = useAxios();
   const [open, setOpen] = useState(null);
 
   const getNotifications = async () => {
     const notifications = await api.get('api/notifications/bank');
     console.log(notifications.data);
-    setTotalUnRead(countUnreadNotifications(notifications.data));
+    // const total = countUnreadNotifications(notifications.data);
+    // setTotalUnRead(total);
     setNotifications(notifications.data);
     // setNotifications(notifications)
   };
-  const countUnreadNotifications = () => {
-    var count = 0; 
-    notifications.map((notification) => {
-      if (notification.isUnRead === true) count++;
-    });
-    return count;
-  };
+  // const countUnreadNotifications = () => {
+  //   var count = 0;
+  //   notifications.map((notification) => {
+  //     if (notification.isUnRead === true) count++;
+  //   });
+  //   return count;
+  // };
   const updateNotificationStatus = async (id) => {
     const response = await api.put(`api/notifications/${id}`);
     console.log(response);
@@ -116,15 +118,11 @@ export default function NotificationsPopover() {
 
   const handleMarkAllAsRead = () => {
     for (const notification of notifications) {
-      updateNotificationStatus(notification._id);
+      if (notification.isUnRead === true) {
+        updateNotificationStatus(notification._id);}
+      
     }
     getNotifications();
-    // setNotifications(
-    //   notifications.map((notification) => ({
-    //     ...notification,
-    //     isUnRead: false,
-    //   }))
-    // );
   };
 
   return (
@@ -155,6 +153,10 @@ export default function NotificationsPopover() {
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               You have {totalUnRead} unread messages
             </Typography>
+            {totalUnRead > 0 &&(
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Double-click to mark all as read.
+            </Typography>)}
           </Box>
 
           {totalUnRead > 0 && (
@@ -212,7 +214,7 @@ export default function NotificationsPopover() {
 
 NotificationItem.propTypes = {
   notification: PropTypes.shape({
-    createdAt: PropTypes.instanceOf(Date),
+    createdAt: PropTypes.string,
     id: PropTypes.string,
     isUnRead: PropTypes.bool,
     title: PropTypes.string,
@@ -238,11 +240,34 @@ function NotificationItem({ notification }) {
     >
       <ListItemAvatar>
         <Avatar sx={{ bgcolor: 'background.neutral' }}>
-          <img alt={notification.title} src="/assets/icons/ic_notification_mail.svg" />
+          {notification.click_action ? (
+            <img alt={notification.title} src="/assets/icons/ic_notification_mail.svg" />
+          ) : (
+            <img alt={notification.title} src="/assets/icons/ic_notification_package.svg" />
+          )}
         </Avatar>
       </ListItemAvatar>
       <ListItemText
-        primary={notification.title}
+        primary={
+          <>
+            <Typography>{notification.title} </Typography>
+            <Typography variant="body2" >
+              {/* wrap  add when string is too long*/}
+              {notification.body}{' '}
+            </Typography>
+            {notification.click_action ? (
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => {
+                  window.open(notification.click_action, '_blank', 'noopener noreferrer');
+                }}
+              >
+                open contract
+              </Link>
+            ) : null}
+          </>
+        }
         secondary={
           <Typography
             variant="caption"

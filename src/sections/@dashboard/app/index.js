@@ -1,4 +1,5 @@
 export { default as AppTasks } from './AppTasks';
+export { default as AppDatePicker } from './AppDatePicker';
 export { default as AppNewsUpdate } from './AppNewsUpdate';
 export { default as AppCurrentVisits } from './AppCurrentVisits';
 export { default as AppOrderTimeline } from './AppOrderTimeline';

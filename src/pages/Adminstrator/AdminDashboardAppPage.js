@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
 // @mui
 import { useTheme } from '@mui/material/styles';
-import { Grid, Container, Typography } from '@mui/material';
+import { Grid, Container, Typography, Card, InputLabel, FormControl, Button, Box, CardHeader } from '@mui/material';
 // components
 import Iconify from '../../components/iconify';
 // sections
@@ -24,6 +24,9 @@ import { selectCurrentUser } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import { STATS_URL } from '../../Constants';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 // ----------------------------------------------------------------------
 
@@ -32,20 +35,73 @@ export default function AdminDashboardAppPage() {
   const user = useSelector(selectCurrentUser);
   const welcome = user.firstname ? `welcome ${user.firstname} ${user.lastname}` : ' Hi, Welcome back';
   const api = useAxios();
-  const [stats,setStats]=useState();
-  const getStats =async(req,res)=>{
-    const stats = await api('api/stats/all');
-    console.log(stats)
-  }
-  useEffect(()=>{
-    getStats()
-  },[])
+  const current = new Date().getFullYear();
+  const [revenueAndProfitYear, setRevenueAndProfitYear] = useState(`${current}`);
+  const [creditCounYear, setCreditCounYear] = useState(`${current}`);
+  const [adminStats, setAdminStats] = useState({});
+  const [topStores, setTopStores] = useState([]);
+  const [topCompanies, setTopCompanies] = useState([]);
+  const [creditCountPerMonth, setCreditCountPerMonth] = useState([]);
+  const [revenueAndProfit, setRevenueAndProfit] = useState([]);
+  const [statusCount, setStatusCount] = useState({});
+  const getAdminStatsCount = async () => {
+    const response = await api(`${STATS_URL}/admin`);
+    setAdminStats(response.data);
+    // console.log(response);
+  };
+  const getTopStores = async () => {
+    const response = await api(`${STATS_URL}/top-stores`);
+    setTopStores(response.data);
+    // console.log(response);
+  };
+  const getCreditGroupedByState = async () => {
+    const response = await api(`${STATS_URL}/state-count`);
+    if (response.data[0]) setStatusCount(response.data[0]);
+    console.log(response.data[0]);
+  };
 
+  const getTopCompanies = async () => {
+    const response = await api(`${STATS_URL}/top-companies`);
+    setTopCompanies(response.data);
+    // console.log(response);
+  };
+  const handleChangeYearForCreditCount = async (values) => {
+    setCreditCountPerMonth([]);
+    const object = {
+      date: values.$d,
+    };
+    const response = await api.post(`${STATS_URL}/credit-count-per-month`, object);
+    setCreditCountPerMonth(response.data);
+  };
+
+  const handleChangeYearForRevenueAndProfit = async (values) => {
+    setRevenueAndProfit([]);
+    const object = {
+      date: values.$d,
+    };
+    const response = await api.post(`${STATS_URL}/revenue-and-profit`, object);
+    setRevenueAndProfit(response.data);
+    // console.log(response.data);
+  };
+
+  useEffect(() => {
+    getCreditGroupedByState();
+    getAdminStatsCount();
+    getTopStores();
+    getTopCompanies();
+    handleChangeYearForCreditCount({ date: new Date() });
+    handleChangeYearForRevenueAndProfit({ date: new Date() });
+  }, []);
+
+  function disabledDate(current) {
+    // Disable all years before 2023
+    return current.year() < 2021; // disabling everything in the past before 2021
+  }
 
   return (
     <>
       <Helmet>
-        <title> Dashboard  </title>
+        <title> Dashboard </title>
       </Helmet>
 
       <Container maxWidth="xl">
@@ -55,117 +111,181 @@ export default function AdminDashboardAppPage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Total companies" total={714000} icon={'mdi:company'} />
+            <AppWidgetSummary title="Total companies" total={adminStats.companiesCount} icon={'mdi:company'} />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Total stores" total={1352831} color="info" icon={'streamline:shopping-store-1-store-shop-shops-stores'} />
+            <AppWidgetSummary
+              title="Total stores"
+              total={adminStats.storesCount}
+              color="info"
+              icon={'streamline:shopping-store-1-store-shop-shops-stores'}
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Total users" total={1723315} color="warning" icon={'mdi:users-group'} />
+            <AppWidgetSummary
+              title="Total clients"
+              total={adminStats.clientsCount}
+              color="warning"
+              icon={'mdi:users-group'}
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Total credit applications" total={714000} color="error" icon={'mdi:form-outline'} />
-          </Grid>
-          <Grid item xs={12} md={6} lg={6}>
-            <AppWebsiteVisits
-              title="Credit Application By Month (2023)"
-              subheader="(+43%) than last year"
-              chartLabels={[
-                '01/01/2023',
-                '02/01/2023',
-                '03/01/2023',
-                '04/01/2023',
-                '05/01/2023',
-                '06/01/2023',
-                '07/01/2023',
-                '08/01/2023',
-                '09/01/2023',
-                '10/01/2023',
-                '11/01/2023',
-                '12/01/2023',
-              ]}
-              chartData={[
-                {
-                  name: 'Team A',
-                  type: 'column',
-                  fill: 'solid',
-                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30,86],
-                },
-              ]}
+            <AppWidgetSummary
+              title="Total credit applications"
+              total={adminStats.creditAppsCount}
+              color="error"
+              icon={'mdi:form-outline'}
             />
-          </Grid>
-          <Grid item xs={12} md={6} lg={6}>
-            <AppWebsiteVisits
-              title="Website Visits"
-              subheader="(+43%) than last year"
-              chartLabels={[
-                '01/01/2003',
-                '02/01/2003',
-                '03/01/2003',
-                '04/01/2003',
-                '05/01/2003',
-                '06/01/2003',
-                '07/01/2003',
-                '08/01/2003',
-                '09/01/2003',
-                '10/01/2003',
-                '11/01/2003',
-                '12/01/2003',
-              ]}
-              chartData={[
-                // {
-                //   name: 'Team A',
-                //   type: 'column',
-                //   fill: 'solid',
-                //   data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30,86],
-                // },
-                {
-                  name: 'Team B',
-                  type: 'area',
-                  fill: 'gradient',
-                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43,87],
-                },
-                {
-                  name: 'Team C',
-                  type: 'line',
-                  fill: 'solid',
-                  data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39,78],
-                },
-              ]}
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6} lg={6}>
-            <AppConversionRates
-              title="Top 5 stores "
-              subheader="(+43%) than last year"
-              chartData={[
-                { label: 'Store 1', value: 400 },
-                { label: 'Store 2', value: 430 },
-                { label: 'Store 3', value: 448 },
-                { label: 'Store 4', value: 470 },
-                { label: 'Store 5', value: 540 },
-              ]}
-            />
-
           </Grid>
           <Grid item xs={12} md={6} lg={6}>
             <AppConversionRates
-              title="Top 5 companies"
+              title={`Top ${topStores.length} Stores by Credit Application Count `}
               subheader="(+43%) than last year"
-              chartData={[
-                { label: 'Company 1', value: 400 },
-                { label: 'Company 2', value: 430 },
-                { label: 'Company 3', value: 448 },
-                { label: 'Company 4', value: 470 },
-                { label: 'Company 5', value: 540 },
-              ]}
+              chartData={topStores.map((store) => ({
+                label: `${store.store.storeLabel}`,
+                value: store.count,
+              }))}
             />
           </Grid>
-          <Grid item xs={12} md={6} lg={4}>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title={`Top ${topCompanies.length} Companies by Credit Application Count `}
+              subheader="(+43%) than last year"
+              chartData={topCompanies.map((company) => ({
+                label: company.companyLabel,
+                value: company.count,
+              }))}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={12} lg={12}>
+            <Card sx={{ p: 3, mb: 1 }}>
+              <CardHeader
+                title={`Monthly Credit Application Count: [${creditCounYear}]`}
+                subheader={
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        label="pick a year"
+                        disableDate={disabledDate}
+                        views={['year']}
+                        onChange={(newValue) => {
+                          setCreditCounYear(newValue.$y);
+                          handleChangeYearForCreditCount(newValue);
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Box>
+                }
+              />
+              <AppWebsiteVisits
+                title={`Monthly Credit Application Count: [${creditCounYear}]`}
+                subheader="(+43%) than last year"
+                chartLabels={creditCountPerMonth.map((credit) => {
+                  const date = new Date(credit.month);
+                  const formattedDate = date.toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                  });
+                  return formattedDate;
+                })}
+                chartData={[
+                  {
+                    name: 'Credit Appllication count',
+                    type: 'area',
+                    fill: 'gradient',
+                    data: creditCountPerMonth.map((credit) => {
+                      return credit.count;
+                    }),
+                  },
+                ]}
+              />
+            </Card>
+          </Grid>
+
+          {/* <Grid item xs={12} md={2} lg={2}>
+            <Card sx={{ p: 3 }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="pick a year"
+                  disableDate={disabledDate}
+                  views={['year']}
+                  onChange={(newValue) => {
+                    setCreditCounYear(newValue.$y);
+                    handleChangeYearForCreditCount(newValue);
+                  }}
+                />
+              </LocalizationProvider>
+            </Card>
+          </Grid> */}
+
+          <Grid item xs={12} md={12} lg={12}>
+            <Card sx={{ p: 3, mb: 1 }}>
+              <CardHeader
+                title={`Monthly Credit Application Count: [${creditCounYear}]`}
+                subheader={
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        label="pick a year"
+                        disableDate={disabledDate}
+                        views={['year']}
+                        onChange={(newValue) => {
+                          setRevenueAndProfitYear(newValue.$y);
+                          handleChangeYearForRevenueAndProfit(newValue);
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Box>
+                }
+              />
+              <AppWebsiteVisits
+                title={`Monthly Revenue and Net Profit:[${revenueAndProfitYear}]`}
+                subheader="(+43%) than last year"
+                chartLabels={revenueAndProfit.map((item) => `${item._id.split('/')[0]}/01/${item._id.split('/')[1]}`)}
+                chartData={[
+                  {
+                    name: 'Revenue',
+                    type: 'column',
+                    fill: 'solid',
+                    data: revenueAndProfit.map((item) => item.revenue),
+                  },
+                  {
+                    name: 'cost',
+                    type: 'column',
+                    fill: 'solid',
+                    data: revenueAndProfit.map((item) => item.cost),
+                  },
+                  {
+                    name: 'Net Profit',
+                    type: 'column',
+                    fill: 'gradient',
+                    data: revenueAndProfit.map((item) => item.netProfit),
+                  },
+                ]}
+              />
+            </Card>
+          </Grid>
+          {/* <Grid item xs={12} md={2} lg={2}>
+            <Card sx={{ p: 3 }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="pick a year"
+                  disableDate={disabledDate}
+                  views={['year']}
+                  onChange={(newValue) => {
+                    setRevenueAndProfitYear(newValue.$y);
+                    handleChangeYearForRevenueAndProfit(newValue);
+                  }}
+                />
+              </LocalizationProvider>
+            </Card>
+          </Grid> */}
+          {/* <Grid item xs={12} md={6} lg={4}>
             <AppCurrentSubject
               title="Current Subject"
               chartLabels={['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math']}
@@ -176,24 +296,38 @@ export default function AdminDashboardAppPage() {
               ]}
               chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
             />
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} md={6} lg={4}>
             <AppCurrentVisits
-              title="Credit application stats"
+              title="Credit Application Percentage by State"
               chartData={[
-                { label: 'Approuved', value: 4344 },
-                { label: 'Waiting', value: 5435 },
-                { label: 'Denied', value: 1443 },
+                { label: 'Simulation', value: statusCount.SIMULATION ? statusCount.SIMULATION : 0 },
+                { label: 'Being created', value: statusCount.BEING_CREATED ? statusCount.BEING_CREATED : 0 },
+                { label: 'Submit credit', value: statusCount.SUBMIT_CREDIT ? statusCount.SUBMIT_CREDIT : 0 },
+                {
+                  label: 'Waiting For Validation',
+                  value: statusCount.WAITING_FOR_VALIDATION ? statusCount.WAITING_FOR_VALIDATION : 0,
+                },
+                {
+                  label: 'Waiting For Signature',
+                  value: statusCount.WAITING_FOR_SIGNATURE ? statusCount.WAITING_FOR_SIGNATURE : 0,
+                },
+                { label: 'Signed', value: statusCount.SIGNED ? statusCount.SIGNED : 0 },
+                { label: 'Rejected', value: statusCount.REJECTED ? statusCount.REJECTED : 0 },
               ]}
               chartColors={[
-                theme.palette.success.main,
+                theme.palette.warning.light,
                 theme.palette.warning.main,
+                theme.palette.warning.dark,
+                theme.palette.success.light,
+                theme.palette.success.main,
+                theme.palette.success.dark,
                 theme.palette.error.main,
               ]}
             />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={8}>
+          {/* <Grid item xs={12} md={6} lg={8}>
             <AppNewsUpdate
               title="News Update"
               list={[...Array(5)].map((_, index) => ({
@@ -263,7 +397,7 @@ export default function AdminDashboardAppPage() {
                 { id: '5', label: 'Sprint Showcase' },
               ]}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Container>
     </>

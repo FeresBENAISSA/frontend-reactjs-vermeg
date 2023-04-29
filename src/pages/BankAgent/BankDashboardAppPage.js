@@ -1,37 +1,66 @@
 import { Helmet } from 'react-helmet-async';
-import { faker } from '@faker-js/faker';
 // @mui
 import { useTheme } from '@mui/material/styles';
-import { Grid, Container, Typography } from '@mui/material';
-// components
-import Iconify from '../../components/iconify';
+import { Grid, Container, Typography, Card, CardHeader } from '@mui/material';
 // sections
 import {
-  AppTasks,
-  AppNewsUpdate,
-  AppOrderTimeline,
   AppCurrentVisits,
   AppWebsiteVisits,
-  AppTrafficBySite,
   AppWidgetSummary,
-  AppCurrentSubject,
   AppConversionRates,
 } from '../../sections/@dashboard/app';
-// import BasicDetailPanels from 'src/components/data-table/dataTable';
-// import Example from './../../components/data-table/dataTablev2';
 import { useSelector } from 'react-redux';
-import { selectCurrentEmail } from '../../redux/features/auth/authSlice';
+import { selectCurrentUser } from '../../redux/features/auth/authSlice';
+import useAxios from '../../api/axios';
+import { STATS_URL } from '../../Constants';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
 // ----------------------------------------------------------------------
 
 export default function BankDashboardAppPage() {
+  const today = new Date();
+  const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 0)); // This will be the first day of the current week
+  const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6)); // This will be the last day of the current week
   const theme = useTheme();
-  const email = useSelector(selectCurrentEmail);
-  const welcome = email ? `welcome${email}` : ' Hi, Welcome back';
+  const api = useAxios();
+  const user = useSelector(selectCurrentUser);
+  const welcome = user.firstname ? `welcome ${user.firstname} ${user.lastname}` : ' Hi, Welcome back';
+
+  const [bankStats, setBankStats] = useState({});
+  const [creditBySex, setCreditBySex] = useState([]);
+  const [creditByAgeRange, setCreditByAgeRange] = useState([]);
+  const [creditCountPerWeek, setCreditCountPerWeek] = useState([]);
+
+  const getBankStatsCount = async () => {
+    const response = await api.get(`${STATS_URL}/bank`);
+    setBankStats(response.data);
+    console.log(response.data);
+  };
+
+  const creditCountBySex = async () => {
+    const response = await api.get(`${STATS_URL}/credit-count-by-sex`);
+    setCreditBySex(response.data);
+  };
+  const creditCountByAgeRange = async () => {
+    const response = await api.get(`${STATS_URL}/credit-count-by-age-range`);
+    setCreditByAgeRange(response.data);
+  };
+  const getCreditCountPerWeek = async () => {
+    const response = await api.get(`${STATS_URL}/credit-count-per-week`);
+    setCreditCountPerWeek(response.data);
+  };
+  useEffect(() => {
+    getBankStatsCount();
+    creditCountBySex();
+    creditCountByAgeRange();
+    getCreditCountPerWeek();
+  }, []);
+
   return (
     <>
       <Helmet>
-        <title> Dashboard | Minimal UI </title>
+        <title> Dashboard Bank Agent </title>
       </Helmet>
 
       <Container maxWidth="xl">
@@ -41,27 +70,103 @@ export default function BankDashboardAppPage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Weekly Sales" total={714000} icon={'ant-design:android-filled'} />
+            <AppWidgetSummary
+              title="Waiting for validation"
+              total={bankStats.waititngForValidationCount}
+              icon={'streamline:interface-page-controller-loading-half-progress-loading-load-half-wait-waiting'}
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="New Users" total={1352831} color="info" icon={'ant-design:apple-filled'} />
+            <AppWidgetSummary
+              title="Waiting for Signature"
+              total={bankStats.waititngForSignatureCount}
+              color="warning"
+              icon={'mdi:sign'}
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Item Orders" total={1723315} color="warning" icon={'ant-design:windows-filled'} />
+            <AppWidgetSummary
+              title="Signed"
+              total={bankStats.signedCount}
+              color="success"
+              icon={'carbon:document-signed'}
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Bug Reports" total={234} color="error" icon={'ant-design:bug-filled'} />
+            <AppWidgetSummary
+              title="Rejected"
+              total={bankStats.rejectedCount}
+              color="error"
+              icon={'ic:baseline-remove-circle'}
+            />
           </Grid>
-          {/* <Grid item xs={12} md={12} lg={12}>
-            <BasicDetailPanels />
-          </Grid> */}
-          {/* <Grid item xs={12} md={12} lg={12}>
-            <Example />
-          </Grid> */}
-          <Grid item xs={12} md={6} lg={8}>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Distribution of Credit Applications by Gender"
+              subheader="(+43%) than last year"
+              chartData={creditBySex.map((item) => ({
+                label: item.sex,
+                value: item.count,
+              }))}
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={6}>
+            <AppConversionRates
+              title="Distribution of Credit Applications by Age Range"
+              subheader="(+43%) than last year"
+              chartData={creditByAgeRange.map((item) => ({
+                label: item.ageRange,
+                value: item.count,
+              }))}
+            />
+          </Grid>
+          <Grid item xs={12} md={12} lg={12}>
+            <Card>
+              <CardHeader
+                title={`Weekly Credit Application Count from ${firstDayOfWeek
+                  .toISOString()
+                  .slice(0, 10)} to ${lastDayOfWeek.toISOString().slice(0, 10)}`}
+              />
+              <AppWebsiteVisits
+                // title={`Weekly Credit Application Count from ${firstDayOfWeek
+                //   .toISOString()
+                //   .slice(0, 10)} to ${lastDayOfWeek.toISOString().slice(0, 10)}`}
+                subheader="(+43%) than last year"
+                chartLabels={creditCountPerWeek.map((credit) => {
+                  const date = new Date(credit.day);
+                  const formattedDate = date.toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                  });
+                  return formattedDate;
+                })}
+                chartData={[
+                  {
+                    name: 'Credit Appllication count',
+                    type: 'line',
+                    fill: 'solid',
+                    data: creditCountPerWeek.map((credit) => {
+                      return credit.count;
+                    }),
+                  },
+                  {
+                    name: 'Approuved Credit Appllication count',
+                    type: 'area',
+                    fill: 'gradient',
+                    data: creditCountPerWeek.map((credit) => {
+                      return credit.signedCount;
+                    }),
+                  },
+                ]}
+              />
+            </Card>
+          </Grid>
+
+          {/* <Grid item xs={12} md={6} lg={8}>
             <AppWebsiteVisits
               title="Website Visits"
               subheader="(+43%) than last year"
@@ -136,92 +241,7 @@ export default function BankDashboardAppPage() {
                 { label: 'United Kingdom', value: 1380 },
               ]}
             />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppCurrentSubject
-              title="Current Subject"
-              chartLabels={['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math']}
-              chartData={[
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ]}
-              chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppNewsUpdate
-              title="News Update"
-              list={[...Array(5)].map((_, index) => ({
-                id: faker.datatype.uuid(),
-                title: faker.name.jobTitle(),
-                description: faker.name.jobTitle(),
-                image: `/assets/images/covers/cover_${index + 1}.jpg`,
-                postedAt: faker.date.recent(),
-              }))}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppOrderTimeline
-              title="Order Timeline"
-              list={[...Array(5)].map((_, index) => ({
-                id: faker.datatype.uuid(),
-                title: [
-                  '1983, orders, $4220',
-                  '12 Invoices have been paid',
-                  'Order #37745 from September',
-                  'New order placed #XF-2356',
-                  'New order placed #XF-2346',
-                ][index],
-                type: `order${index + 1}`,
-                time: faker.date.past(),
-              }))}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppTrafficBySite
-              title="Traffic by Site"
-              list={[
-                {
-                  name: 'FaceBook',
-                  value: 323234,
-                  icon: <Iconify icon={'eva:facebook-fill'} color="#1877F2" width={32} />,
-                },
-                {
-                  name: 'Google',
-                  value: 341212,
-                  icon: <Iconify icon={'eva:google-fill'} color="#DF3E30" width={32} />,
-                },
-                {
-                  name: 'Linkedin',
-                  value: 411213,
-                  icon: <Iconify icon={'eva:linkedin-fill'} color="#006097" width={32} />,
-                },
-                {
-                  name: 'Twitter',
-                  value: 443232,
-                  icon: <Iconify icon={'eva:twitter-fill'} color="#1C9CEA" width={32} />,
-                },
-              ]}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppTasks
-              title="Tasks"
-              list={[
-                { id: '1', label: 'Create FireStone Logo' },
-                { id: '2', label: 'Add SCSS and JS files if required' },
-                { id: '3', label: 'Stakeholder Meeting' },
-                { id: '4', label: 'Scoping & Estimations' },
-                { id: '5', label: 'Sprint Showcase' },
-              ]}
-            />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Container>
     </>

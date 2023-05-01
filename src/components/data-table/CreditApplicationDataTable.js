@@ -24,6 +24,7 @@ import {
   Grid,
   DialogContentText,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 
 import { ExportToCsv } from 'export-to-csv';
@@ -43,6 +44,8 @@ const CreditApplicationDataTable = () => {
   const [modalContent, setModalContent] = useState(null);
   const api = useAxios();
   const user = useSelector(selectCurrentUser);
+  // approuve credit application 
+  const [processing, setProcessing] = useState(false);
 
   // api's
   const getCredits = async () => {
@@ -57,6 +60,7 @@ const CreditApplicationDataTable = () => {
     }
   };
   const updateApprouve = async (row, comment) => {
+    setProcessing(true);
     const values = {};
     values.creditId = row.original._id;
     values.bankAgentId = user._id;
@@ -68,6 +72,8 @@ const CreditApplicationDataTable = () => {
       getCredits();
     } catch (error) {
       toast.error('Failed ');
+    }  finally {
+      setProcessing(false);
     }
   };
   
@@ -217,15 +223,6 @@ const CreditApplicationDataTable = () => {
       ),
     },
   ]);
-  const csvOptions = {
-    fieldSeparator: ',',
-    quoteStrings: '"',
-    decimalSeparator: '.',
-    showLabels: true,
-    useBom: true,
-    useKeysAsHeaders: false,
-    headers: columns.map((c) => c.header),
-  };
 
   // const csvExporter = new ExportToCsv(csvOptions);
   // let content;
@@ -240,7 +237,8 @@ const CreditApplicationDataTable = () => {
         enableColumnOrdering
         enableGrouping
         enablePinning
-        // onEditingRowSave={handleSaveRowEdits}
+        state={{ showProgressBars: processing }}
+                // onEditingRowSave={handleSaveRowEdits}
         enableRowActions
         enableRowSelection
         initialState={{ showColumnFilters: false }}
@@ -296,6 +294,8 @@ const CreditApplicationDataTable = () => {
                 <Close />
               </IconButton>
             </Tooltip>
+            {/* {processing && <CircularProgress />} */}
+
           </Box>
         )}
         // renderTopToolbarCustomActions={({ table }) => {

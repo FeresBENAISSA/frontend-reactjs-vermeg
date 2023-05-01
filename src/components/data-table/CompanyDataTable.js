@@ -34,6 +34,8 @@ import { number } from 'prop-types';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AlertDialog from './AlertDialog';
+import { CreateNewCompanyModal } from '../CreateModals/createNewCompanyModal';
+import { UpdateCompanyModal } from '../UpdateModals/updateCompanyModal';
 
 const companyImage = require('./avatar_1.jpg');
 
@@ -41,7 +43,8 @@ const CompanyDataTable = () => {
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
-
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [rowToUpdate, setRowToUpdate] = useState({});
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -93,7 +96,7 @@ const CompanyDataTable = () => {
 
   // toast notification functions
   const handleApiResponse = (response) => {
-    if (response.status === 201 ||response.status === 200 ) {
+    if (response.status === 201 || response.status === 200) {
       console.log(response.data);
       toast.success('operation successfully completed');
     } else {
@@ -108,6 +111,15 @@ const CompanyDataTable = () => {
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
     console.log(formData);
     await createCompany(formData);
+    getCompanies();
+    // alert(' success ');
+  };
+  const handleUpdateRow = async (values) => {
+    console.log(values);
+    const formData = new FormData();
+    Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    console.log(formData);
+    await updateCompany(formData);
     getCompanies();
     // alert(' success ');
   };
@@ -323,7 +335,12 @@ const CompanyDataTable = () => {
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
-            <IconButton onClick={() => table.setEditingRow(row)}>
+            <IconButton
+              onClick={() => {
+                setRowToUpdate(row.original);
+                setUpdateModalOpen(true);
+              }}
+            >
               <Edit />
             </IconButton>
           </Tooltip>
@@ -338,16 +355,26 @@ const CompanyDataTable = () => {
         // <Button color="secondary" onClick={() => setCreateModalOpen(true)} variant="contained"></Button>;
 
         const handleDeleteAll = () => {
-          table.getSelectedRowModel().flatRows.map((row) => {
-            alert('deactivating ' + row.getValue('name'));
+          setModalContent({
+            title: 'Delete Companies',
+            content: 'Are you sure you want to delete all Compnies\nPlease note that deleting a company will also delete all the stores associated with it',
+            actionText: 'Delete',
+            denyText: 'Cancel',
+            handleClick: () => {
+              table.getSelectedRowModel().flatRows.map((row) => {
+                //send api delete request here, then refetch or update local table data for re-render
+                deleteCompany(row.getValue('_id'));
+              });
+              setModalContent(null);
+            },
+            handleClose: () => {
+              setModalContent(null);
+            },
+            requireComment: false,
           });
         };
         const handleExportRows = (rows) => {
           csvExporter.generateCsv(rows.map((row) => row.original));
-        };
-
-        const handleExportData = () => {
-          csvExporter.generateCsv(data);
         };
 
         return (
@@ -370,166 +397,26 @@ const CompanyDataTable = () => {
               onClick={handleDeleteAll}
               variant="contained"
             >
-              Delete
+              Delete Selected
             </Button>
-            <CreateNewUserModal
+            <UpdateCompanyModal
+              row={rowToUpdate}
+              open={updateModalOpen}
+              onClose={() => setUpdateModalOpen(false)}
+              onSubmitModal={handleUpdateRow}
+            />
+            <CreateNewCompanyModal
               columns={columns}
               open={createModalOpen}
               onClose={() => setCreateModalOpen(false)}
-              onSubmit={handleCreateNewRow}
+              onSubmitModal={handleCreateNewRow}
             />
-             {modalContent && <AlertDialog {...modalContent} />}
+            {modalContent && <AlertDialog {...modalContent} />}
             <ToastContainer position="bottom-right" />
           </div>
         );
       }}
     />
-  );
-};
-
-export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
-  const ImageInput = useRef();
-  const [selectedImage, setSelectedImage] = useState(null);
-  // const [errors, setErrors] = useState({
-  //   companyLabel: '',
-  //   companyDescription: '',
-  //   companyAddress: '',
-  //   companyPhoneNumber: '',
-  // });
-
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
-
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === 'image/png') {
-      setSelectedImage(file);
-      setValues({ ...values, [event.target.name]: file });
-    } else {
-      setSelectedImage(null);
-      alert('Please select a valid PNG file');
-    }
-  };
-  const [values, setValues] = useState(() =>
-    columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = '';
-      return acc;
-    }, {})
-  );
-  // const schema = yup.object().shape({
-  //   companyLabel: yup.string().required('companyLabel is required.'),
-  //   companyDescription: yup.string().required('companyDescription is required.'),
-  //   companyAddress: yup.string().required('companyAddress is required.'),
-  //   companyPhoneNumber: yup.number().typeError('Enter valid Phone Number').required('companyPhoneNumber is required.'),
-  // });
-
-  const handleSubmit = async (e) => {
-    //put your validation logic here
-    console.log(values);
-    // createProduct(values,token);
-    // const companyLabel = values.companyLabel;
-    // const companyDescription = values.companyDescription;
-    // const companyAddress = values.companyAddress;
-    // const companyPhoneNumber = values.companyPhoneNumber;
-    try {
-      // await schema.validate(
-      //   { companyLabel, companyDescription, companyAddress, companyPhoneNumber },
-      //   { abortEarly: false }
-      // );
-      // const response = await addProduct(values).unwrap();
-    } catch (err) {
-      // console.log(err)
-      // const newErrors = {};
-      // err.inner.forEach((error) => {
-      //   newErrors[error.path] = error.message;
-      // });
-      // setErrors(newErrors);
-      console.log(err);
-    }
-    onSubmit(values);
-    // setValues()
-    onClose();
-  };
-
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Company</DialogTitle>
-
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-
-              gap: '1.5rem',
-            }}
-          >
-            <TextField
-              label="Label"
-              name="companyLabel"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-              // helperText={errors.companyLabel && <div>{errors.companyLabel}</div>}
-              // error={errors.companyLabel ? true : false}
-            />
-            <TextField
-              label="Description"
-              name="companyDescription"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-              // helperText={errors.companyDescription && <div>{errors.companyDescription}</div>}
-              // error={errors.companyDescription ? true : false}
-            />
-            <TextField
-              label="Address"
-              name="companyAddress"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-              // helperText={errors.companyAddress && <div>{errors.companyAddress}</div>}
-              // error={errors.companyAddress ? true : false}
-            />
-            <TextField
-              label="PhoneNumber"
-              name="companyPhoneNumber"
-              type="number"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-              // helperText={errors.companyPhoneNumber && <div>{errors.companyPhoneNumber}</div>}
-              // error={errors.companyPhoneNumber ? true : false}
-            />
-          </Stack>
-          <input
-            style={{ display: 'none' }}
-            accept="image/png"
-            id="comapnyLogo"
-            onChange={handleImageSelect}
-            name="companyLogo"
-            type="file"
-            ref={ImageInput}
-          />
-          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select Company logo
-          </Button>
-          {selectedImage && (
-            <>
-              <Typography color="text.secondary" variant="body2">
-                Selected Image: {selectedImage.name}
-              </Typography>
-            </>
-          )}
-        </form>
-      </DialogContent>
-
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancel</Button>
-
-        <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New Company
-        </Button>
-      </DialogActions>
-    </Dialog>
   );
 };
 const validateRequired = (value) => !!value.length;

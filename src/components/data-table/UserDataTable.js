@@ -30,12 +30,17 @@ import { CometChat } from '@cometchat-pro/chat';
 import AlertDialog from './AlertDialog';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CreateNewUserModal } from '../CreateModals/createNewUserModal';
+import { UpdateBrandModal } from '../UpdateModals/updateBrandModal';
+import { UpdateUserModal } from '../UpdateModals/updateUserModal';
 const userImage = require('./avatar_1.jpg');
 
 const UserDataTable = () => {
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [rowToUpdate, setRowToUpdate] = useState({});
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -63,16 +68,13 @@ const UserDataTable = () => {
   };
   const updateUser = async (values) => {
     try {
+      console.log(values)
       const response = await api.put(USERS_URL, values);
       handleApiResponse(response);
     } catch (error) {
       toast.error('Failed');
     }
   };
-  // const getUserByEmail = async (email)=>{
-  //   const response = await api.get(`${USERS_URL}/${email}`);
-  //   return response.data
-  // }
 
   const createUser = async (values) => {
     try {
@@ -132,61 +134,42 @@ const UserDataTable = () => {
     await createUser(formData);
     getUsers();
   };
+  const handleUpdateRow = async (values) => {
+    console.log(values);
+    delete values.roles;
+    delete values.roles;
 
-  const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
-    if (!Object.keys(validationErrors).length) {
-      // const roles = [];
-      console.log(values);
-      tableData[row.index] = values;
-      //roles from string to table
-      console.log(tableData[row.index].roles);
-      //send/receive api updates here, then refetch or update local table data for re-render
-      await updateUser(tableData[row.index]);
-      setTableData([...tableData]);
-      exitEditingMode(); //required to exit editing mode and close modal
-    }
+    const formData = new FormData();
+    Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    console.log(formData);
+    await updateUser(formData);
+    getUsers();
   };
 
-  // const handleCancelRowEdits = () => {
-  //   setValidationErrors({});
-  // };
+ 
 
   const handleDeleteRow = useCallback(
     (row) => {
-      if (!window.confirm(`Are you sure you want to delete ${row.getValue('_id')}`)) {
-        return;
-      }
+      setModalContent({
+        title: 'Delete User',
+        content: 'Are you sure you want to delete this User?',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          deleteUser(row.getValue('_id'));
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
       //send api delete request here, then refetch or update local table data for re-render
-      deleteUser(row.getValue('_id'));
+    
     },
     [tableData]
   );
-  const getCommonEditTextFieldProps = useCallback(
-    (cell) => {
-      return {
-        error: !!validationErrors[cell.id],
-        helperText: validationErrors[cell.id],
-        onBlur: (event) => {
-          console.log(event);
-          const isValid = cell.column.id === 'username' ? validateRequired(event.target.value) : true;
-          if (!isValid) {
-            //set validation error for cell if invalid
-            setValidationErrors({
-              ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
-          } else {
-            //remove validation error for cell if valid
-            delete validationErrors[cell.id];
-            setValidationErrors({
-              ...validationErrors,
-            });
-          }
-        },
-      };
-    },
-    [validationErrors]
-  );
+  
 
   const columns = useMemo(
     () => [
@@ -234,40 +217,11 @@ const UserDataTable = () => {
         accessorKey: 'lastname', //simple recommended way to define a column
         header: 'lastname',
       },
-      // {
-      //   accessorFn: (row) => `${row.firstname} ${row.lastname}`, //accessorFn used to join multiple data into a single cell
-      //   id: 'name', //id is still required when using accessorFn instead of accessorKey
-      //   header: 'Full Name',
-      //   size: 250,
-      //   Cell: ({ renderedCellValue, row }) => (
-      //     <Box
-      //       sx={{
-      //         display: 'flex',
-
-      //         alignItems: 'center',
-
-      //         gap: '1rem',
-      //       }}
-      //     >
-      //       <img
-      //         alt="avatar"
-      //         height={40}
-      //         width={40}
-      //         src={row.original.avatar ? BASE_URL + row.original.avatar.split('\\')[1] : userImage}
-      //         loading="lazy"
-      //         style={{ borderRadius: '50%' }}
-      //       />
-      //       {/* using renderedCellValue instead of cell.getValue() preserves filter match highlighting */}
-      //       <span>{renderedCellValue}</span>
-      //     </Box>
-      //   ),
-      // },
+      
       {
         accessorKey: 'username', //simple recommended way to define a column
         header: 'Username',
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+
       },
       {
         accessorKey: 'email', //simple recommended way to define a column
@@ -286,7 +240,7 @@ const UserDataTable = () => {
         header: 'Phone Number',
       },
     ],
-    [getCommonEditTextFieldProps]
+    []
   );
   const csvOptions = {
     fieldSeparator: ',',
@@ -311,7 +265,7 @@ const UserDataTable = () => {
       enableColumnOrdering
       enableGrouping
       enablePinning
-      onEditingRowSave={handleSaveRowEdits}
+      // onEditingRowSave={handleSaveRowEdits}
       enableRowActions
       enableRowSelection
       initialState={{ showColumnFilters: false }}
@@ -337,7 +291,12 @@ const UserDataTable = () => {
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
-            <IconButton onClick={() => table.setEditingRow(row)}>
+          <IconButton
+              onClick={() => {
+                setRowToUpdate(row.original);
+                setUpdateModalOpen(true);
+              }}
+            >
               <Edit />
             </IconButton>
           </Tooltip>
@@ -352,9 +311,24 @@ const UserDataTable = () => {
         // <Button color="secondary" onClick={() => setCreateModalOpen(true)} variant="contained"></Button>;
 
         const handleDeleteAll = () => {
-          table.getSelectedRowModel().flatRows.map((row) => {
-            alert('deactivating ' + row.getValue('name'));
+          setModalContent({
+            title: 'Delete Users',
+            content: 'Are you sure you want to delete all selected Users?',
+            actionText: 'Delete',
+            denyText: 'Cancel',
+            handleClick: () => {
+              table.getSelectedRowModel().flatRows.map((row) => {
+                //send api delete request here, then refetch or update local table data for re-render
+                deleteUser(row.getValue('_id'));
+              });
+              setModalContent(null);
+            },
+            handleClose: () => {
+              setModalContent(null);
+            },
+            requireComment: false,
           });
+         
         };
         const handleExportRows = (rows) => {
           csvExporter.generateCsv(rows.map((row) => row.original));
@@ -386,11 +360,17 @@ const UserDataTable = () => {
             >
               Delete selected
             </Button>
+            <UpdateUserModal
+              open={updateModalOpen}
+              onClose={() => setUpdateModalOpen(false)}
+              onSubmitModal={handleUpdateRow}
+              row={rowToUpdate}
+            />
             <CreateNewUserModal
               columns={columns}
               open={createModalOpen}
               onClose={() => setCreateModalOpen(false)}
-              onSubmit={handleCreateNewRow}
+              onSubmitModal={handleCreateNewRow}
             />
             {modalContent && <AlertDialog {...modalContent} />}
             <ToastContainer position="bottom-right" />
@@ -401,187 +381,7 @@ const UserDataTable = () => {
   );
 };
 
-export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
-  // const [addProduct] = useAddProductMutation();
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [subOptions, setSubOptions] = useState([]);
-  const ImageInput = useRef();
-  const [selectedImage, setSelectedImage] = useState(null);
-  const api = useAxios();
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
-  // const getAvailableStores = async () => {};
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === 'image/png') {
-      setSelectedImage(file);
-      setValues({ ...values, [event.target.name]: file });
-    } else {
-      setSelectedImage(null);
-      alert('Please select a valid PNG file');
-    }
-  };
-  useEffect(() => {
-    if (selectedOption === 'STORE_MANAGER') {
-      api
-        .get(AVAILABLE_STORES_URL)
-        .then((response) => {
-          setSubOptions(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
-  }, [selectedOption]);
 
-  const [values, setValues] = useState(() =>
-    columns.reduce((acc, column) => {
-      // console.log(column);
-      acc[column.accessorKey ?? ''] = '';
-      return acc;
-    }, {})
-  );
-
-  const handleSubmit = async (e) => {
-    //put your validation logic here
-    //change role string to table
-    const roles = [];
-    roles.push(values.roles);
-    values.roles = roles;
-    console.log(values);
-    onSubmit(values);
-    onClose();
-  };
-
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New User</DialogTitle>
-
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem',
-            }}
-          >
-            {' '}
-            {/* <TextField
-              label="firstname"
-              name="firstname"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            />
-            <TextField
-              label="lastname"
-              name="lastname"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            /> */}
-            {columns
-              .filter((column) => {
-                if (column.accessorKey === '_id') return false;
-                else if (column.accessorKey === 'avatar') return false;
-                else if (column.id === 'createdAt') return false;
-                else if (column.id === 'roles') return false;
-                else if (column.id === 'name') return false;
-                else return true;
-              })
-              .map((column) => (
-                <TextField
-                  key={column.accessorKey === '' ? column.accessorKey : column.id}
-                  label={column.header}
-                  name={column.accessorKey !== '' ? column.accessorKey : column.id}
-                  type={column.type}
-                  onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-                />
-              ))}
-            <FormControl fullWidth>
-              <InputLabel id="roles">Roles</InputLabel>
-              <Select
-                labelId="roles"
-                id="roles"
-                name="roles"
-                label="Roles"
-                onChange={(e) => {
-                  setSelectedOption(e.target.value);
-                  setValues({ ...values, [e.target.name]: e.target.value });
-                }}
-              >
-                <MenuItem value={STORE_MANAGER}>Store Manager</MenuItem>
-                <MenuItem value={BANK_AGENT}>Bank agent</MenuItem>
-                <MenuItem value={ADMIN}>Admin </MenuItem>
-              </Select>
-            </FormControl>
-            {selectedOption === 'STORE_MANAGER' ? (
-              <FormControl fullWidth>
-                <InputLabel id="store">Store </InputLabel>
-                <Select
-                  labelId="store"
-                  id="store"
-                  name="storeId"
-                  label="store"
-                  onChange={(e) => {
-                    console.log(e.target);
-                    setValues({ ...values, [e.target.name]: e.target.value });
-                  }}
-                >
-                  {/* <MenuItem value={'FNAC'}>fnac</MenuItem>
-                  <MenuItem value={'DARTY'}>darty</MenuItem>
-                  <MenuItem value={'ADMIN'}>Admin </MenuItem> */}
-                  {subOptions.map((option) => (
-                    <MenuItem key={option.storeLabel} value={option._id}>
-                      {option.storeLabel}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            ) : null}
-            <TextField
-              label="password"
-              name="password"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            />
-          </Stack>
-          <input
-            style={{ display: 'none' }}
-            accept="image/png"
-            id="avatar"
-            onChange={handleImageSelect}
-            name="avatar"
-            type="file"
-            ref={ImageInput}
-          />
-          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select user avatar
-          </Button>
-          {selectedImage && (
-            <>
-              <Typography color="text.secondary" variant="body2">
-                Selected Image: {selectedImage.name}
-              </Typography>
-
-              {/* <Button fullWidth variant="text" onClick={handleUpload}>
-                Upload
-              </Button> */}
-            </>
-          )}
-        </form>
-      </DialogContent>
-
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancel</Button>
-
-        <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New User
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
 const validateRequired = (value) => !!value.length;
 
 export default UserDataTable;

@@ -30,6 +30,8 @@ import { BASE_URL, STORES_URL } from '../../Constants';
 import AlertDialog from './AlertDialog';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CreateNewStoreModal } from '../CreateModals/createNewStoreModal';
+import { UpdateStoreModal } from '../UpdateModals/updateStoreModal';
 const storeImage = require('./avatar_1.jpg');
 
 const StoreDataTable = () => {
@@ -39,6 +41,9 @@ const StoreDataTable = () => {
 
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [rowToUpdate, setRowToUpdate] = useState({});
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+
   const api = useAxios();
 
   const getStores = async () => {
@@ -104,6 +109,15 @@ const StoreDataTable = () => {
     await createStore(formData);
     getStores();
     // alert(' success ');
+  };
+  const handleUpdateRow = async (values) => {
+    console.log(values);
+    const formData = new FormData();
+
+    Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    console.log(formData);
+    await updateStore(formData);
+    getStores();
   };
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
@@ -299,7 +313,12 @@ const StoreDataTable = () => {
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
-            <IconButton onClick={() => table.setEditingRow(row)}>
+            <IconButton
+              onClick={() => {
+                setRowToUpdate(row.original);
+                setUpdateModalOpen(true);
+              }}
+            >
               <Edit />
             </IconButton>
           </Tooltip>
@@ -314,8 +333,22 @@ const StoreDataTable = () => {
         // <Button color="secondary" onClick={() => setCreateModalOpen(true)} variant="contained"></Button>;
 
         const handleDeleteAll = () => {
-          table.getSelectedRowModel().flatRows.map((row) => {
-            alert('deactivating ' + row.getValue('name'));
+          setModalContent({
+            title: 'Delete Stores',
+            content: 'Are you sure you want to delete selected Stores?',
+            actionText: 'Delete',
+            denyText: 'Cancel',
+            handleClick: () => {
+              table.getSelectedRowModel().flatRows.map((row) => {
+                //send api delete request here, then refetch or update local table data for re-render
+                deleteStore(row.getValue('_id'));
+              });
+              setModalContent(null);
+            },
+            handleClose: () => {
+              setModalContent(null);
+            },
+            requireComment: false,
           });
         };
         const handleExportRows = (rows) => {
@@ -346,13 +379,19 @@ const StoreDataTable = () => {
               onClick={handleDeleteAll}
               variant="contained"
             >
-              Delete
+              Delete Selected
             </Button>
-            <CreateNewUserModal
+            <UpdateStoreModal
+              open={updateModalOpen}
+              onClose={() => setUpdateModalOpen(false)}
+              onSubmitModal={handleUpdateRow}
+              row={rowToUpdate}
+            />
+            <CreateNewStoreModal
               columns={columns}
               open={createModalOpen}
               onClose={() => setCreateModalOpen(false)}
-              onSubmit={handleCreateNewRow}
+              onSubmitModal={handleCreateNewRow}
             />
             {modalContent && <AlertDialog {...modalContent} />}
             <ToastContainer position="bottom-right" />

@@ -37,6 +37,7 @@ import { BASE_URL, BRANDS_URL, CATEGORY_URL, PRODUCTS_URL } from './../../Consta
 import AlertDialog from './AlertDialog';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CreateNewProductModal } from '../CreateModals/createNewProducts';
 
 const productImage = require('./avatar_1.jpg');
 
@@ -486,11 +487,11 @@ const ProductDataTable = () => {
             >
               Delete selected
             </Button>
-            <CreateNewAccountModal
+            <CreateNewProductModal
               columns={columns}
               open={createModalOpen}
               onClose={() => setCreateModalOpen(false)}
-              onSubmit={handleCreateNewRow}
+              onSubmitModal={handleCreateNewRow}
             />
             {modalContent && <AlertDialog {...modalContent} />}
             <ToastContainer position="bottom-right" />

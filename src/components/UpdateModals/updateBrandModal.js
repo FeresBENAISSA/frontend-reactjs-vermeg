@@ -14,10 +14,13 @@ import {
   Typography,
 } from '@mui/material';
 import * as yup from 'yup';
+import { useEffect } from 'react';
 import { Close } from '@mui/icons-material';
-export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) => {
+import { BASE_URL } from '../../Constants';
+
+export const UpdateBrandModal = ({ open, row, onClose, onSubmitModal }) => {
   const ImageInput = useRef();
-  // when uploading an image, this will handle if image is selected or not
+  // when uploading an image, this will handle if image is selected or not 
   const [selectedImage, setSelectedImage] = useState(null);
   // this state is for preview image
   const [previewImage, setPreviewImage] = useState(null);
@@ -33,7 +36,6 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
   const brandSchema = yup.object().shape({
     title: yup.string().required('Required'),
     description: yup.string().required('Required'),
-    brandLogo: yup.mixed().required('Required'),
   });
   // open directory to get specific brand logo
   const handleButtonClick = () => {
@@ -55,32 +57,34 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
   const onSubmit = async (values, actions) => {
     console.log(values);
     console.log(actions);
-    // this function use the on Sumbit of the modal that will save new brand
     onSubmitModal(values);
     onClose();
     setSelectedImage(null);
-    resetForm({
-      values: {
-        title: '',
-        description: '',
-      },
-    });
   };
   // formik initail values and schema
-  const { values, errors, touched, isSubmitting, resetForm, setFieldValue, handleBlur, handleChange, handleSubmit } =
-    useFormik({
-      initialValues: {
-        title: '',
-        description: '',
-        brandLogo: null,
-      },
-      validationSchema: brandSchema,
-      onSubmit,
-    });
+  const { values, errors, touched, isSubmitting, setFieldValue, handleBlur, handleChange, handleSubmit } = useFormik({
+    initialValues: {
+      _id: row._id,
+      title: row.title,
+      description: row.description,
+    },
+    validationSchema: brandSchema,
+    onSubmit,
+  });
 
+  // when clicking on update, will change the data for specific row on launch
+  useEffect(() => {
+    setFieldValue('_id', row._id);
+    setFieldValue('title', row.title);
+    setFieldValue('description', row.description);
+    const photo =row.logo ? BASE_URL + row.logo.split('\\')[1] : '';
+    setSelectedImage(photo)
+    setPreviewImage(photo)
+  }, [row]);
+  
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Brand</DialogTitle>
+      <DialogTitle textAlign="center">Update Existing Brand</DialogTitle>
       <form autoComplete="off" onSubmit={handleSubmit}>
         <DialogContent>
           <Stack
@@ -110,6 +114,7 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
               multiline
               rows={5}
             />
+
             <input
               style={{ display: 'none' }}
               accept="image/png"
@@ -118,19 +123,17 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
               name="brandLogo"
               type="file"
               ref={ImageInput}
-              error={Boolean(errors.brandLogo) && touched.brandLogo}
             />
             <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
               Select Brand Logo
             </Button>
-            {errors.brandLogo && touched.brandLogo ? (
-              <Alert severity="error"> {touched.brandLogo && errors.brandLogo}</Alert>
-            ) : null}
+
+            {errors.brandLogo ? <Alert severity="error">{errors.brandLogo}</Alert> : null}
 
             {selectedImage && (
               <>
                 <Alert severity="success" style={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography inline color="text.secondary" variant="body2" component="span">
+                  <Typography color="text.secondary" variant="body2" component="span">
                     Selected Image: {selectedImage.name}
                   </Typography>
                   <Button color="success" inline onClick={handleClickOpen}>
@@ -139,6 +142,7 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
                 </Alert>
               </>
             )}
+
             <Dialog open={openPreview} onClose={handleClose}>
               <DialogTitle>Logo Preview</DialogTitle>
               <DialogContent>
@@ -148,13 +152,14 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
                 </IconButton>
               </DialogContent>
             </Dialog>
+            
           </Stack>
         </DialogContent>
 
         <DialogActions sx={{ p: '1.25rem' }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button color="secondary" type="submit" variant="contained" disabled={isSubmitting}>
-            Create New Brand
+            Update Brand
           </Button>
         </DialogActions>
       </form>

@@ -42,6 +42,8 @@ import {
 import AlertDialog from './AlertDialog';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CreateNewEmployeeModal } from '../CreateModals/createNewEmployeeModal';
+import { UpdateEmployeeModal } from '../UpdateModals/updateEmployeeModal';
 
 const userImage = require('./avatar_1.jpg');
 
@@ -51,6 +53,8 @@ const UserDataTable = () => {
   const [data, setData] = useState([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [rowToUpdate, setRowToUpdate] = useState({});
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
@@ -85,6 +89,7 @@ const UserDataTable = () => {
   };
   const createUser = async (values) => {
     try {
+      console.log(values)
       const response = await api.post(USERS_URL, values);
       handleApiResponse(response);
     } catch (error) {
@@ -99,6 +104,7 @@ const UserDataTable = () => {
     setTableData(data);
   }, [data]);
 
+
   const handleApiResponse = (response) => {
     console.log(response);
     if (response.status === 201 || response.status === 200) {
@@ -111,13 +117,24 @@ const UserDataTable = () => {
   const handleCreateNewRow = async (values) => {
     console.log(values);
     const formData = new FormData();
+    const roles = [STORE_EMPLOYEE];
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
     formData.append('storeId', user.store);
+    formData.append('roles', roles);
     console.log(formData);
     await createUser(formData);
     getUsers();
   };
 
+const handleUpdateRow = async (values) => {
+    console.log(values);
+    delete values.roles;
+    const formData = new FormData();
+    Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    console.log(formData);
+    await updateUser(formData);
+    getUsers();
+  };
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
       const roles = [];
@@ -335,7 +352,12 @@ const UserDataTable = () => {
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
-            <IconButton onClick={() => table.setEditingRow(row)}>
+          <IconButton
+              onClick={() => {
+                setRowToUpdate(row.original);
+                setUpdateModalOpen(true);
+              }}
+            >
               <Edit />
             </IconButton>
           </Tooltip>
@@ -365,7 +387,7 @@ const UserDataTable = () => {
         return (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button color="info" onClick={() => setCreateModalOpen(true)} variant="contained">
-              Create New User
+              Create New Employee
             </Button>
             <Button
               color="warning"
@@ -382,13 +404,19 @@ const UserDataTable = () => {
               onClick={handleDeleteAll}
               variant="contained"
             >
-              Delete
+              Delete Selected
             </Button>
-            <CreateNewUserModal
+            <UpdateEmployeeModal
+              open={updateModalOpen}
+              onClose={() => setUpdateModalOpen(false)}
+              onSubmitModal={handleUpdateRow}
+              row={rowToUpdate}
+            />
+            <CreateNewEmployeeModal
               columns={columns}
               open={createModalOpen}
               onClose={() => setCreateModalOpen(false)}
-              onSubmit={handleCreateNewRow}
+              onSubmitModal={handleCreateNewRow}
             />
             {modalContent && <AlertDialog {...modalContent} />}
             <ToastContainer position="bottom-right" />
@@ -399,151 +427,151 @@ const UserDataTable = () => {
   );
 };
 
-export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
-  // const [addProduct] = useAddProductMutation();
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [subOptions, setSubOptions] = useState([]);
-  const ImageInput = useRef();
-  const [selectedImage, setSelectedImage] = useState(null);
-  const api = useAxios();
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
-  const getAvailableStores = async () => {};
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === 'image/png') {
-      setSelectedImage(file);
-      setValues({ ...values, [event.target.name]: file });
-    } else {
-      setSelectedImage(null);
-      alert('Please select a valid PNG file');
-    }
-  };
+// export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
+//   // const [addProduct] = useAddProductMutation();
+//   const [selectedOption, setSelectedOption] = useState(null);
+//   const [subOptions, setSubOptions] = useState([]);
+//   const ImageInput = useRef();
+//   const [selectedImage, setSelectedImage] = useState(null);
+//   const api = useAxios();
+//   const handleButtonClick = () => {
+//     ImageInput.current.click();
+//   };
+//   const getAvailableStores = async () => {};
+//   const handleImageSelect = (event) => {
+//     const file = event.target.files[0];
+//     if (file && file.type === 'image/png') {
+//       setSelectedImage(file);
+//       setValues({ ...values, [event.target.name]: file });
+//     } else {
+//       setSelectedImage(null);
+//       alert('Please select a valid PNG file');
+//     }
+//   };
 
-  const [values, setValues] = useState(() =>
-    columns.reduce((acc, column) => {
-      // console.log(column);
-      acc[column.accessorKey ?? ''] = '';
-      return acc;
-    }, {})
-  );
+//   const [values, setValues] = useState(() =>
+//     columns.reduce((acc, column) => {
+//       // console.log(column);
+//       acc[column.accessorKey ?? ''] = '';
+//       return acc;
+//     }, {})
+//   );
 
-  const handleSubmit = async (e) => {
-    //put your validation logic here
-    //change role string to table
-    const roles = [];
-    roles.push(values.roles);
-    values.roles = roles;
-    console.log(values);
-    onSubmit(values);
-    onClose();
-  };
+//   const handleSubmit = async (e) => {
+//     //put your validation logic here
+//     //change role string to table
+//     const roles = [];
+//     roles.push(values.roles);
+//     values.roles = roles;
+//     console.log(values);
+//     onSubmit(values);
+//     onClose();
+//   };
 
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New User</DialogTitle>
+//   return (
+//     <Dialog open={open}>
+//       <DialogTitle textAlign="center">Create New Employee</DialogTitle>
 
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem',
-            }}
-          >
-            {' '}
-            {/* <TextField
-              label="firstname"
-              name="firstname"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            />
-            <TextField
-              label="lastname"
-              name="lastname"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            /> */}
-            {columns
-              .filter((column) => {
-                if (column.accessorKey == '_id') return false;
-                else if (column.accessorKey == 'avatar') return false;
-                else if (column.id == 'createdAt') return false;
-                else if (column.id == 'roles') return false;
-                else if (column.id == 'name') return false;
-                else return true;
-              })
-              .map((column) => (
-                <TextField
-                  key={column.accessorKey == '' ? column.accessorKey : column.id}
-                  label={column.header}
-                  name={column.accessorKey !== '' ? column.accessorKey : column.id}
-                  type={column.type}
-                  onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-                />
-              ))}
-            <FormControl fullWidth>
-              <InputLabel id="roles">Roles</InputLabel>
-              <Select
-                labelId="roles"
-                id="roles"
-                name="roles"
-                label="Roles"
-                onChange={(e) => {
-                  setSelectedOption(e.target.value);
-                  setValues({ ...values, [e.target.name]: e.target.value });
-                }}
-              >
-                <MenuItem selected value={STORE_EMPLOYEE}>
-                  Store Employee{' '}
-                </MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label="password"
-              name="password"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            />
-          </Stack>
-          <input
-            style={{ display: 'none' }}
-            accept="image/png"
-            id="avatar"
-            onChange={handleImageSelect}
-            name="avatar"
-            type="file"
-            ref={ImageInput}
-          />
-          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select user avatar
-          </Button>
-          {selectedImage && (
-            <>
-              <Typography color="text.secondary" variant="body2">
-                Selected Image: {selectedImage.name}
-              </Typography>
+//       <DialogContent>
+//         <form onSubmit={(e) => e.preventDefault()}>
+//           <Stack
+//             sx={{
+//               width: '100%',
+//               minWidth: { xs: '300px', sm: '360px', md: '400px' },
+//               gap: '1.5rem',
+//             }}
+//           >
+//             {' '}
+//             {/* <TextField
+//               label="firstname"
+//               name="firstname"
+//               type="text"
+//               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+//             />
+//             <TextField
+//               label="lastname"
+//               name="lastname"
+//               type="text"
+//               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+//             /> */}
+//             {columns
+//               .filter((column) => {
+//                 if (column.accessorKey == '_id') return false;
+//                 else if (column.accessorKey == 'avatar') return false;
+//                 else if (column.id == 'createdAt') return false;
+//                 else if (column.id == 'roles') return false;
+//                 else if (column.id == 'name') return false;
+//                 else return true;
+//               })
+//               .map((column) => (
+//                 <TextField
+//                   key={column.accessorKey == '' ? column.accessorKey : column.id}
+//                   label={column.header}
+//                   name={column.accessorKey !== '' ? column.accessorKey : column.id}
+//                   type={column.type}
+//                   onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+//                 />
+//               ))}
+//             <FormControl fullWidth>
+//               <InputLabel id="roles">Roles</InputLabel>
+//               <Select
+//                 labelId="roles"
+//                 id="roles"
+//                 name="roles"
+//                 label="Roles"
+//                 onChange={(e) => {
+//                   setSelectedOption(e.target.value);
+//                   setValues({ ...values, [e.target.name]: e.target.value });
+//                 }}
+//               >
+//                 <MenuItem selected value={STORE_EMPLOYEE}>
+//                   Store Employee{' '}
+//                 </MenuItem>
+//               </Select>
+//             </FormControl>
+//             <TextField
+//               label="password"
+//               name="password"
+//               type="text"
+//               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+//             />
+//           </Stack>
+//           <input
+//             style={{ display: 'none' }}
+//             accept="image/png"
+//             id="avatar"
+//             onChange={handleImageSelect}
+//             name="avatar"
+//             type="file"
+//             ref={ImageInput}
+//           />
+//           <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
+//             Select user avatar
+//           </Button>
+//           {selectedImage && (
+//             <>
+//               <Typography color="text.secondary" variant="body2">
+//                 Selected Image: {selectedImage.name}
+//               </Typography>
 
-              {/* <Button fullWidth variant="text" onClick={handleUpload}>
-                Upload
-              </Button> */}
-            </>
-          )}
-        </form>
-      </DialogContent>
+//               {/* <Button fullWidth variant="text" onClick={handleUpload}>
+//                 Upload
+//               </Button> */}
+//             </>
+//           )}
+//         </form>
+//       </DialogContent>
 
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancel</Button>
+//       <DialogActions sx={{ p: '1.25rem' }}>
+//         <Button onClick={onClose}>Cancel</Button>
 
-        <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New User
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
+//         <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
+//           Create New Employee
+//         </Button>
+//       </DialogActions>
+//     </Dialog>
+//   );
+// };
 const validateRequired = (value) => !!value.length;
 
 export default UserDataTable;

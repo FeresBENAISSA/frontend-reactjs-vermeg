@@ -16,7 +16,7 @@ import { selectCurrentRoles } from '../../../redux/features/auth/authSlice';
 
 // ----------------------------------------------------------------------
 
-const NAV_WIDTH = 280;
+const NAV_WIDTH = 310;
 
 const HEADER_MOBILE = 64;
 

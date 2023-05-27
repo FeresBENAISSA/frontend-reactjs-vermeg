@@ -275,6 +275,7 @@ const StoreDataTable = () => {
     <MaterialReactTable
       columns={columns}
       data={tableData}
+      enableFullScreenToggle={false}
       editingMode="modal"
       enableColumnFilterModes
       enableColumnOrdering
@@ -285,31 +286,31 @@ const StoreDataTable = () => {
       enableRowSelection
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
-      renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-evenly',
-            alignItems: 'center',
-          }}
-        >
-          {' '}
-          <Typography variant="h6">Logo of {row.original.storeLabel}: </Typography>
-          <br />
-          <img
-            alt="image"
-            height={150}
-            src={row.original.storeLogo ? BASE_URL + row.original.storeLogo.split('\\')[1] : storeImage}
-            loading="lazy"
-          />
-          {/* <img alt="bank card" height={150} src={row.original.storeLogo ? BASE_URL+row.original.storeLogo.split('\\')[1] : storeImage} loading="lazy" /> */}
-          {/* style={{ borderRadius: '50%' }} */}
-          {/* <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">Signature Catch Phrase: </Typography>
-            <Typography variant="h1">&quot;{row.original.storeLabel}&quot;</Typography>
-          </Box> */}
-        </Box>
-      )}
+      // renderDetailPanel={({ row }) => (
+      //   <Box
+      //     sx={{
+      //       display: 'flex',
+      //       justifyContent: 'space-evenly',
+      //       alignItems: 'center',
+      //     }}
+      //   >
+      //     {' '}
+      //     <Typography variant="h6">Logo of {row.original.storeLabel}: </Typography>
+      //     <br />
+      //     <img
+      //       alt="image"
+      //       height={150}
+      //       src={row.original.storeLogo ? BASE_URL + row.original.storeLogo.split('\\')[1] : storeImage}
+      //       loading="lazy"
+      //     />
+      //     {/* <img alt="bank card" height={150} src={row.original.storeLogo ? BASE_URL+row.original.storeLogo.split('\\')[1] : storeImage} loading="lazy" /> */}
+      //     {/* style={{ borderRadius: '50%' }} */}
+      //     {/* <Box sx={{ textAlign: 'center' }}>
+      //       <Typography variant="h4">Signature Catch Phrase: </Typography>
+      //       <Typography variant="h1">&quot;{row.original.storeLabel}&quot;</Typography>
+      //     </Box> */}
+      //   </Box>
+      // )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">

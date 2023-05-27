@@ -28,22 +28,43 @@ const Main = styled('div')(({ theme }) => ({
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
   },
+  zIndex: 2,
 }));
 
+// const Main = styled.main`
+//   position: relative;
+//   z-index: 1; // Set the z-index of the main component to a higher value
+// `;
+
+const NavWrapper = styled('div')`
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 1; // Set the z-index of the navigation and menu button components to a lower value
+`;
+const HeaderWrapper = styled('div')(({ isTableExpanded }) => ({
+  position: 'fixed',
+  top: isTableExpanded ? -APP_BAR_MOBILE : 0,
+  left: 0,
+  zIndex: 3,
+}));
 // ----------------------------------------------------------------------
 
 export default function ManagerDashboardLayout() {
   const [open, setOpen] = useState(false);
 
+  
+
   return (
-    
     <StyledRoot>
-      <Header onOpenNav={() => setOpen(true)} />
-
-      <Nav openNav={open} onCloseNav={() => setOpen(false)} />
-
+         <HeaderWrapper >
+        <Header onOpenNav={() => setOpen(true)} />
+        </HeaderWrapper>
+      <NavWrapper>
+        <Nav openNav={open} onCloseNav={() => setOpen(false)} />
+      </NavWrapper>
       <Main>
-        <Outlet />
+        <Outlet  />
       </Main>
     </StyledRoot>
   );

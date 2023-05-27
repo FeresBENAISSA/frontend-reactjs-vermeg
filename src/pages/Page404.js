@@ -43,7 +43,7 @@ export default function Page404() {
           />
 
           <Button to="/login" size="large" variant="contained" component={RouterLink}>
-            Go to Home
+            Go to Login Page
           </Button>
         </StyledContent>
       </Container>

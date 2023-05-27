@@ -192,6 +192,7 @@ const BrandDataTable = () => {
     <MaterialReactTable
       columns={columns}
       data={tableData}
+      enableFullScreenToggle={false}
       editingMode="modal"
       enableColumnFilterModes
       enableColumnOrdering

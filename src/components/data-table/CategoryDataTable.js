@@ -159,6 +159,7 @@ const CategoryDataTable = () => {
     <MaterialReactTable
       columns={columns}
       data={tableData}
+      enableFullScreenToggle={false}
       editingMode="modal"
       enableColumnFilterModes
       enableColumnOrdering

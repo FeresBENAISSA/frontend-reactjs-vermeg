@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 //MRT Imports
 import MaterialReactTable from 'material-react-table';
-import { Delete, Edit, Add } from '@mui/icons-material';
+import { Delete, Edit, Add, Download } from '@mui/icons-material';
+import QRCode, { QRCodeCanvas } from 'qrcode.react';
 
 //Material-UI Imports
 import {
@@ -22,6 +23,7 @@ import {
   Select,
   ImageList,
   ImageListItem,
+  CircularProgress,
 } from '@mui/material';
 
 //Date Picker Imports
@@ -38,6 +40,11 @@ import AlertDialog from './AlertDialog';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { CreateNewProductModal } from '../CreateModals/createNewProducts';
+import { UpdateProductModal } from '../UpdateModals/updateProductModal';
+
+import DownloadPDFButton from './DownloadPDFButton';
+import SelectedDocument from '../PrintDocument/SelectedDocument';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 
 const productImage = require('./avatar_1.jpg');
 
@@ -47,6 +54,8 @@ const ProductDataTable = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
   const [tableData, setTableData] = useState([]);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [rowToUpdate, setRowToUpdate] = useState({});
   const [validationErrors, setValidationErrors] = useState({});
   const api = useAxios();
   const [selectedImage, setSelectedImage] = useState(null);
@@ -57,7 +66,7 @@ const ProductDataTable = () => {
       const response = await api.get(`${PRODUCTS_URL}/store/${user.store}`);
       if (!response?.data) throw Error('no data found');
       const products = response.data;
-      console.log(products);
+      // console.log(products);
       setData(products);
     } catch (error) {
       console.log(error);
@@ -66,6 +75,16 @@ const ProductDataTable = () => {
   const deleteProduct = async (id) => {
     try {
       const response = await api.delete(`${PRODUCTS_URL}/${id}`);
+      await getProducts();
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
+  };
+
+  const deleteSpecificImage = async (id, path) => {
+    try {
+      const response = await api.delete(`${PRODUCTS_URL}/image/${id}/${path}`);
       await getProducts();
       handleApiResponse(response);
     } catch (error) {
@@ -82,11 +101,11 @@ const ProductDataTable = () => {
   };
   const createProduct = async (values) => {
     try {
-    const response = await api.post(PRODUCTS_URL, values);
-    handleApiResponse(response);
-  } catch (error) {
-    toast.error('Failed');
-  }
+      const response = await api.post(PRODUCTS_URL, values);
+      handleApiResponse(response);
+    } catch (error) {
+      toast.error('Failed');
+    }
   };
   useEffect(() => {
     getProducts();
@@ -97,8 +116,8 @@ const ProductDataTable = () => {
   }, [data]);
 
   const handleApiResponse = (response) => {
-    console.log(response)
-    if (response.status === 201 ||response.status === 200) {
+    // console.log(response);
+    if (response.status === 201 || response.status === 200) {
       toast.success('operation successfully completed');
     } else {
       toast.error('Error occured');
@@ -106,7 +125,7 @@ const ProductDataTable = () => {
   };
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     values.storeId = user.store;
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
@@ -122,14 +141,24 @@ const ProductDataTable = () => {
       }
     }
 
-    console.log(formData);
+    // console.log(formData);
     await createProduct(formData);
     getProducts();
   };
 
+  const handleUpdateRow = async (values) => {
+    // console.log(values);
+    // const formData = new FormData();
+    // Object.keys(values).forEach((key) => formData.append(key, values[key]));
+    // console.log(formData);
+    await updateProduct(values);
+    getProducts();
+    // alert(' success ');
+  };
+
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
-      console.log(values);
+      // console.log(values);
       tableData[row.index] = values;
       //send/receive api updates here, then refetch or update local table data for re-render
       const response = await api.put(PRODUCTS_URL, tableData[row.index]);
@@ -167,31 +196,6 @@ const ProductDataTable = () => {
       // window.location.reload(true);
     },
     [tableData]
-  );
-  const getCommonEditTextFieldProps = useCallback(
-    (cell) => {
-      return {
-        error: !!validationErrors[cell.id],
-        helperText: validationErrors[cell.id],
-        onBlur: (event) => {
-          const isValid = cell.column.id === 'label' ? validateRequired(event.target.value) : true;
-          if (!isValid) {
-            //set validation error for cell if invalid
-            setValidationErrors({
-              ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
-          } else {
-            //remove validation error for cell if valid
-            delete validationErrors[cell.id];
-            setValidationErrors({
-              ...validationErrors,
-            });
-          }
-        },
-      };
-    },
-    [validationErrors]
   );
 
   const columns = useMemo(
@@ -316,6 +320,10 @@ const ProductDataTable = () => {
         accessorKey: 'category.title',
         header: 'category',
       },
+      {
+        accessorKey: 'brand.title',
+        header: 'Brand',
+      },
     ],
     []
   );
@@ -339,14 +347,39 @@ const ProductDataTable = () => {
     // }
   };
 
-  const DeleteImage = async (id, image) => {
-    const path = image.split('\\')[1];
-    if (!window.confirm(`Are you sure you want to delete this image`)) {
-      return;
+  const DeleteImage = async (id, image, images) => {
+    //
+    if (images.length == 1) {
+      setModalContent({
+        title: "You can't delete this image",
+        content: 'Product must have at least one image',
+        actionText: 'Ok',
+        denyText: 'Cancel',
+        handleClick: () => {
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
+    } else {
+      setModalContent({
+        title: 'Delete Product image',
+        content: 'Are you sure',
+        actionText: 'Delete',
+        denyText: 'Cancel',
+        handleClick: () => {
+          const path = image.split('\\')[1];
+          deleteSpecificImage(id, path);
+          setModalContent(null);
+        },
+        handleClose: () => {
+          setModalContent(null);
+        },
+        requireComment: false,
+      });
     }
-    await api.delete(`${PRODUCTS_URL}/image/${id}/${path}`);
-    await getProducts();
-    alert('image deleted');
   };
   const handleUpload = async (id) => {
     const formData = new FormData();
@@ -357,7 +390,7 @@ const ProductDataTable = () => {
       await getProducts();
       alert('added succefuly');
     }
-    console.log(formData);
+    // console.log(formData);
     setSelectedImage(null);
   };
   const handleButtonClick = () => {
@@ -365,8 +398,11 @@ const ProductDataTable = () => {
   };
   const csvExporter = new ExportToCsv(csvOptions);
   let content;
+  const canvasRef = useRef(null);
   // if (isLoading) return <p>is Loading </p>;
   // else if (isSuccess)
+
+  const [arrayOfProducts, setArrayOfProducts] = useState([]);
   return (
     <MaterialReactTable
       columns={columns}
@@ -376,6 +412,7 @@ const ProductDataTable = () => {
       enableColumnOrdering
       enableGrouping
       enablePinning
+      enableFullScreenToggle={false}
       onEditingRowSave={handleSaveRowEdits}
       enableRowActions
       enableRowSelection
@@ -418,7 +455,7 @@ const ProductDataTable = () => {
                   loading="lazy"
                 />
                 <IconButton
-                  onClick={() => DeleteImage(row.original._id, image)}
+                  onClick={() => DeleteImage(row.original._id, image, row.original.productImages)}
                   sx={{
                     color: 'red',
                     backgroundColor: 'white',
@@ -430,13 +467,22 @@ const ProductDataTable = () => {
                 </IconButton>
               </ImageListItem>
             ))}
+            <div style={{ margin: 20 }}>
+              <QRCodeCanvas value={row.original._id} />
+              {/* <img src={QRCode.image(row.original._id, { type: 'png', size: 10 })} alt="QR code" /> */}
+            </div>
           </ImageList>
         </>
       )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
-            <IconButton onClick={() => table.setEditingRow(row)}>
+            <IconButton
+              onClick={() => {
+                setRowToUpdate(row.original);
+                setUpdateModalOpen(true);
+              }}
+            >
               <Edit />
             </IconButton>
           </Tooltip>
@@ -445,26 +491,47 @@ const ProductDataTable = () => {
               <Delete />
             </IconButton>
           </Tooltip>
+          {row.original ? (
+            <Tooltip arrow placement="right" title="Print">
+              <IconButton color="success">
+                <DownloadPDFButton data={row.original} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
         </Box>
       )}
       renderTopToolbarCustomActions={({ table }) => {
+        // const handlePrintData = () => {
+        //   const productsSelected = [];
+        //   table.getSelectedRowModel().flatRows.map((row) => {
+        //     productsSelected.push(row.original);
+        //   });
+
+        //   setArrayOfProducts(productsSelected);
+        //   console.log(arrayOfProducts);
+        // };
         const handleDeleteSelected = () => {
-          table.getSelectedRowModel().flatRows.map((row) => {
-            if (!window.confirm(`Are you sure you want to delete ${row.getValue('productLabel')}`)) {
-              return;
-            }
-            //send api delete request here, then refetch or update local table data for re-render
-            deleteProduct(row.getValue('_id'));
+          setModalContent({
+            title: 'Delete Products',
+            content: 'Are you sure you want to delete selected products?',
+            actionText: 'Delete',
+            denyText: 'Cancel',
+            handleClick: () => {
+              table.getSelectedRowModel().flatRows.map((row) => {
+                //send api delete request here, then refetch or update local table data for re-render
+                deleteProduct(row.getValue('_id'));
+              });
+              setModalContent(null);
+            },
+            handleClose: () => {
+              setModalContent(null);
+            },
+            requireComment: false,
           });
         };
         const handleExportRows = (rows) => {
           csvExporter.generateCsv(rows.map((row) => row.original));
         };
-
-        const handleExportData = () => {
-          csvExporter.generateCsv(data);
-        };
-
         return (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button color="info" onClick={() => setCreateModalOpen(true)} variant="contained">
@@ -487,6 +554,13 @@ const ProductDataTable = () => {
             >
               Delete selected
             </Button>
+
+            <UpdateProductModal
+              open={updateModalOpen}
+              onClose={() => setUpdateModalOpen(false)}
+              onSubmitModal={handleUpdateRow}
+              row={rowToUpdate}
+            />
             <CreateNewProductModal
               columns={columns}
               open={createModalOpen}
@@ -501,185 +575,185 @@ const ProductDataTable = () => {
     />
   );
 };
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
-  // const [addProduct] = useAddProductMutation();
-  const ImageInput = useRef();
-  const api = useAxios();
-  const user = useSelector(selectCurrentUser);
-  const [companies, setCompanies] = useState([]);
-  const [brand, setBrand] = useState([]);
-  const [selectedImages, setSelectedImages] = useState([]);
+// export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
+//   // const [addProduct] = useAddProductMutation();
+//   const ImageInput = useRef();
+//   const api = useAxios();
+//   const user = useSelector(selectCurrentUser);
+//   const [companies, setCompanies] = useState([]);
+//   const [brand, setBrand] = useState([]);
+//   const [selectedImages, setSelectedImages] = useState([]);
 
-  useEffect(() => {
-    api
-      .get(`${CATEGORY_URL}/store/${user.store}`)
-      .then((response) => {
-        setCompanies(response.data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-    api
-      .get(`${BRANDS_URL}/store/${user.store}`)
-      .then((response) => {
-        setBrand(response.data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
-  const handleImageSelect = (event) => {
-    const files = event.target.files;
-    // for (var file of files) {
-    //   if (file && file.type !== 'image/png') {
-    //     setSelectedImages(null);
-    //     return alert('Please select a valid PNG file');
-    //   }
-    // }
-    setSelectedImages(files);
-    setValues({ ...values, [event.target.name]: files });
-  };
-  const [values, setValues] = useState(() =>
-    columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = '';
-      return acc;
-    }, {})
-  );
+//   useEffect(() => {
+//     api
+//       .get(`${CATEGORY_URL}/store/${user.store}`)
+//       .then((response) => {
+//         setCompanies(response.data);
+//       })
+//       .catch((error) => {
+//         console.error(error);
+//       });
+//     api
+//       .get(`${BRANDS_URL}/store/${user.store}`)
+//       .then((response) => {
+//         setBrand(response.data);
+//       })
+//       .catch((error) => {
+//         console.error(error);
+//       });
+//   }, []);
+//   const handleButtonClick = () => {
+//     ImageInput.current.click();
+//   };
+//   const handleImageSelect = (event) => {
+//     const files = event.target.files;
+//     // for (var file of files) {
+//     //   if (file && file.type !== 'image/png') {
+//     //     setSelectedImages(null);
+//     //     return alert('Please select a valid PNG file');
+//     //   }
+//     // }
+//     setSelectedImages(files);
+//     setValues({ ...values, [event.target.name]: files });
+//   };
+//   const [values, setValues] = useState(() =>
+//     columns.reduce((acc, column) => {
+//       acc[column.accessorKey ?? ''] = '';
+//       return acc;
+//     }, {})
+//   );
 
-  const handleSubmit = async (e) => {
-    //put your validation logic here
-    // console.log(values);
-    // createProduct(values,token);
-    // try {
-    //   const response = await addProduct(values).unwrap();
-    // } catch (err) {
-    //   console.log(err);
-    // }
-    onSubmit(values);
-    onClose();
-    setValues(null);
-    setSelectedImages([]);
-    //  window.location.reload(true);
-  };
+//   const handleSubmit = async (e) => {
+//     //put your validation logic here
+//     // console.log(values);
+//     // createProduct(values,token);
+//     // try {
+//     //   const response = await addProduct(values).unwrap();
+//     // } catch (err) {
+//     //   console.log(err);
+//     // }
+//     onSubmit(values);
+//     onClose();
+//     setValues(null);
+//     setSelectedImages([]);
+//     //  window.location.reload(true);
+//   };
 
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Product</DialogTitle>
+//   return (
+//     <Dialog open={open}>
+//       <DialogTitle textAlign="center">Create New Product</DialogTitle>
 
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
+//       <DialogContent>
+//         <form onSubmit={(e) => e.preventDefault()}>
+//           <Stack
+//             sx={{
+//               width: '100%',
 
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
+//               minWidth: { xs: '300px', sm: '360px', md: '400px' },
 
-              gap: '1.5rem',
-            }}
-          >
-            <TextField
-              label="Label"
-              name="productLabel"
-              type="text"
-              onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-            />
-            {columns
-              .filter((column) => {
-                if (column.accessorKey == '_id') return false;
-                if (column.accessorKey == 'category.title') return false;
-                if (column.accessorKey == 'brand.title') return false;
-                else if (column.id == 'createdAt') return false;
-                else if (column.id == 'productLabel') return false;
-                else return true;
-              })
-              .map((column) => (
-                <TextField
-                  required
-                  key={column.accessorKey == '' ? column.accessorKey : column.id}
-                  label={column.header}
-                  name={column.accessorKey !== '' ? column.accessorKey : column.id}
-                  type={column.type}
-                  onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
-                />
-              ))}
+//               gap: '1.5rem',
+//             }}
+//           >
+//             <TextField
+//               label="Label"
+//               name="productLabel"
+//               type="text"
+//               onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+//             />
+//             {columns
+//               .filter((column) => {
+//                 if (column.accessorKey == '_id') return false;
+//                 if (column.accessorKey == 'category.title') return false;
+//                 if (column.accessorKey == 'brand.title') return false;
+//                 else if (column.id == 'createdAt') return false;
+//                 else if (column.id == 'productLabel') return false;
+//                 else return true;
+//               })
+//               .map((column) => (
+//                 <TextField
+//                   required
+//                   key={column.accessorKey == '' ? column.accessorKey : column.id}
+//                   label={column.header}
+//                   name={column.accessorKey !== '' ? column.accessorKey : column.id}
+//                   type={column.type}
+//                   onChange={(e) => setValues({ ...values, [e.target.name]: e.target.value })}
+//                 />
+//               ))}
 
-            <FormControl fullWidth>
-              <InputLabel id="categoryId">Category </InputLabel>
-              <Select
-                required
-                labelId="category"
-                id="categoryId"
-                name="categoryId"
-                label="Category"
-                onChange={(e) => {
-                  setValues({ ...values, [e.target.name]: e.target.value });
-                }}
-              >
-                {companies.map((option) => (
-                  <MenuItem key={option._id} value={option._id}>
-                    {option.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+//             <FormControl fullWidth>
+//               <InputLabel id="categoryId">Category </InputLabel>
+//               <Select
+//                 required
+//                 labelId="category"
+//                 id="categoryId"
+//                 name="categoryId"
+//                 label="Category"
+//                 onChange={(e) => {
+//                   setValues({ ...values, [e.target.name]: e.target.value });
+//                 }}
+//               >
+//                 {companies.map((option) => (
+//                   <MenuItem key={option._id} value={option._id}>
+//                     {option.title}
+//                   </MenuItem>
+//                 ))}
+//               </Select>
+//             </FormControl>
 
-            <FormControl fullWidth>
-              <InputLabel id="brandId">Brand </InputLabel>
-              <Select
-                required
-                labelId="brand"
-                id="brandId"
-                name="brandId"
-                label="Brand"
-                onChange={(e) => {
-                  setValues({ ...values, [e.target.name]: e.target.value });
-                }}
-              >
-                {brand.map((option) => (
-                  <MenuItem key={option._id} value={option._id}>
-                    {option.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-          <input
-            style={{ display: 'none' }}
-            accept="image/png"
-            id="productImages"
-            onChange={handleImageSelect}
-            name="productImages"
-            type="file"
-            multiple
-            ref={ImageInput}
-          />
-          <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-            Select Products Photos
-          </Button>
+//             <FormControl fullWidth>
+//               <InputLabel id="brandId">Brand </InputLabel>
+//               <Select
+//                 required
+//                 labelId="brand"
+//                 id="brandId"
+//                 name="brandId"
+//                 label="Brand"
+//                 onChange={(e) => {
+//                   setValues({ ...values, [e.target.name]: e.target.value });
+//                 }}
+//               >
+//                 {brand.map((option) => (
+//                   <MenuItem key={option._id} value={option._id}>
+//                     {option.title}
+//                   </MenuItem>
+//                 ))}
+//               </Select>
+//             </FormControl>
+//           </Stack>
+//           <input
+//             style={{ display: 'none' }}
+//             accept="image/png"
+//             id="productImages"
+//             onChange={handleImageSelect}
+//             name="productImages"
+//             type="file"
+//             multiple
+//             ref={ImageInput}
+//           />
+//           <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
+//             Select Products Photos
+//           </Button>
 
-          {selectedImages && (
-            <>
-              <Typography color="text.secondary" variant="body2">
-                Selected Image length: {selectedImages.length}
-              </Typography>
-            </>
-          )}
-        </form>
-      </DialogContent>
+//           {selectedImages && (
+//             <>
+//               <Typography color="text.secondary" variant="body2">
+//                 Selected Image length: {selectedImages.length}
+//               </Typography>
+//             </>
+//           )}
+//         </form>
+//       </DialogContent>
 
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancel</Button>
+//       <DialogActions sx={{ p: '1.25rem' }}>
+//         <Button onClick={onClose}>Cancel</Button>
 
-        <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-          Create New Product
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
+//         <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
+//           Create New Product
+//         </Button>
+//       </DialogActions>
+//     </Dialog>
+//   );
+// };
 const validateRequired = (value) => !!value.length;
 
 export default ProductDataTable;

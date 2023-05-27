@@ -22,37 +22,37 @@ const Information = ({ row }) => {
 
           <List>
             <ListItem>
-              <ListItemText primary="Firstname" secondary={row.client.firstname ? row.client.firstname : 'Marie'} />
+              <ListItemText primary="Firstname" secondary={row?.client?.firstname ? row?.client?.firstname : 'Marie'} />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Lastname" secondary={row.client.lastname ? row.client.lastname : 'Marie'} />
+              <ListItemText primary="Lastname" secondary={row?.client?.lastname ? row?.client?.lastname : 'Marie'} />
             </ListItem>
             <ListItem>
               <ListItemText
                 primary="Address"
-                secondary={row.client.address ? row.client.address : '05 Rue abou zakariya el hafsi'}
+                secondary={row?.client?.address ? row?.client?.address : '05 Rue abou zakariya el hafsi'}
               />
             </ListItem>
             <ListItem>
               <ListItemText
                 primary="documentNumber"
-                secondary={row.client.documentNumber ? row.client.documentNumber : ''}
+                secondary={row?.client?.documentNumber ? row?.client?.documentNumber : ''}
               />
             </ListItem>
             <ListItem>
-              <ListItemText primary="DateOfBirth" secondary={row.client.dateOfBirth ? row.client.dateOfBirth : ''} />
+              <ListItemText primary="DateOfBirth" secondary={row?.client?.dateOfBirth ? row?.client?.dateOfBirth : ''} />
             </ListItem>
             <ListItem>
-              <ListItemText primary="placeOfBirth" secondary={row.client.placeOfBirth ? row.client.placeOfBirth : ''} />
+              <ListItemText primary="placeOfBirth" secondary={row?.client?.placeOfBirth ? row?.client?.placeOfBirth : ''} />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Identity" secondary={row.client.identity ? row.client.identity : ''} />
+              <ListItemText primary="Identity" secondary={row?.client?.identity ? row?.client?.identity : ''} />
             </ListItem>
             <ListItem>
-              <ListItemText primary="email" secondary={row.client.email ? row.client.email : ''} />
+              <ListItemText primary="email" secondary={row?.client?.email ? row?.client?.email : ''} />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Iban" secondary={row.client.IBAN ? row.client.IBAN : ''} />
+              <ListItemText primary="Iban" secondary={row?.client?.IBAN ? row?.client?.IBAN : ''} />
             </ListItem>
           </List>
         </Grid>
@@ -63,7 +63,7 @@ const Information = ({ row }) => {
 
           <List>
             <ListItem>
-              <ListItemText primary="creditAmount" secondary={row.simulation.creditAmount ? row.simulation.creditAmount : 'Marie'} />
+              <ListItemText primary="creditAmount" secondary={row?.simulation?.creditAmount ? row?.simulation?.creditAmount : 'Marie'} />
             </ListItem>
             <ListItem>
               <ListItemText primary="deposit" secondary={row.simulation.deposit ? row.simulation.deposit : ''} />

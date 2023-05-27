@@ -9,17 +9,17 @@ const navConfigBank= [
   {
     title: 'Bank dashboard ',
     path: '/dashboard/bank',
-    icon: icon('ic_analytics'),
+    icon: icon('ic_dashboard'),
   },
   {
     title: 'Credit Applications',
     path: '/dashboard/credits',
-    icon: icon('ic_user'),
+    icon: icon('ic_credit'),
   },
   {
     title: 'profile',
     path: '/dashboard/bankprofile',
-    icon: icon('ic_user'),
+    icon: icon('ic_profile'),
   },
  
 ];

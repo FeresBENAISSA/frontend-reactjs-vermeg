@@ -31,6 +31,7 @@ import CategoryPage from './pages/StoreManager/CategoryPage';
 import BrandPage from './pages/StoreManager/BrandPage';
 import Chat from './pages/Adminstrator/Chat';
 import CreditApplication from './pages/BankAgent/CreditApplicationPage';
+import ChatStoreManager from './pages/StoreManager/ChatStoreManager';
 
 // import RequireAuth from './components/RequireAuth';
 
@@ -58,6 +59,8 @@ export default function Router() {
             { path: 'brands', element: <BrandPage /> },
             { path: 'employee', element: <StoreEmployeePage /> },
             { path: 'profile', element: <ManagerProfile /> },
+            { path: 'chatStoreManager', element: <ChatStoreManager /> },
+
             // { path: 'blog', element: <BlogPage /> },
             // { path: 'products', element: <ProductsPage /> },
             // { path: 'bank', element: <BankDashboardAppPage /> },
@@ -105,7 +108,7 @@ export default function Router() {
             { path: 'bank', element: <BankDashboardAppPage /> },
             { path: 'credits', element: <CreditApplication/> },
             { path: 'bankprofile', element: <BankProfile/> },
-           
+
 
           ],
         },

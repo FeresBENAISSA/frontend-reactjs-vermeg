@@ -280,6 +280,7 @@ const CompanyDataTable = () => {
     <MaterialReactTable
       columns={columns}
       data={tableData}
+      enableFullScreenToggle={false}
       editingMode="modal"
       enableColumnFilterModes
       enableColumnOrdering
@@ -290,48 +291,6 @@ const CompanyDataTable = () => {
       enableRowSelection
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
-      renderDetailPanel={({ row }) => (
-        <>
-          {/* <table>
-            <tr>
-              <th>storeLabel</th>
-              <th>storeAddress</th>
-              <th>storeLabel</th>
-            </tr>
-              {row.original.companyStores.map((store) => (
-                  // <Typography variant="h6">{store.storeLabel} : </Typography>
-                  <tr>
-                  <td>{store.storeLabel}</td>
-                  <td>{store.storeAddress}</td>
-                  <td>{store.storeLabel}</td>
-                </tr>
-              ))}
-          </table> */}
-        </>
-        // <Box
-        //   sx={{
-        //     display: 'flex',
-        //     justifyContent: 'space-evenly',
-        //     alignItems: 'center',
-        //   }}
-        // >
-        //   {' '}
-        //   <Typography variant="h6">Logo of {row.original.companyLabel}: </Typography>
-        //   <br />
-        //   <img
-        //     alt="image"
-        //     height={150}
-        //     src={row.original.companyLogo ? BASE_URL + row.original.companyLogo.split('\\')[1] : companyImage}
-        //     loading="lazy"
-        //   />
-        //   {/* <img alt="bank card" height={150} src={row.original.storeLogo ? BASE_URL+row.original.storeLogo.split('\\')[1] : companyImage} loading="lazy" /> */}
-        //   {/* style={{ borderRadius: '50%' }} */}
-        //   {/* <Box sx={{ textAlign: 'center' }}>
-        //     <Typography variant="h4">Signature Catch Phrase: </Typography>
-        //     <Typography variant="h1">&quot;{row.original.storeLabel}&quot;</Typography>
-        //   </Box> */}
-        // </Box>
-      )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">

@@ -29,9 +29,8 @@ import { selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { useSelector } from 'react-redux';
 import useAxios from '../../api/axios';
 import { useEffect } from 'react';
-import Scanner from './Scanner';
 import Quagga from 'quagga';
-export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal }) => {
+export const UpdateProductModal = ({ open, row, onClose, onSubmitModal }) => {
   // scanner part
   const inputRef = useRef(null);
   const api = useAxios();
@@ -51,22 +50,18 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
     setPreviewImage(null);
     setOpenPreview(false);
   };
-  
+
   const [companies, setCompanies] = useState([]);
   const [brand, setBrand] = useState([]);
- 
+
   // yup brand schema, form should respect the followin schema
   const referenceRules = /^\d{12}$/;
   const productSchema = yup.object().shape({
     productLabel: yup.string().required('Required'),
     productDescription: yup.string().required('Required'),
-    productReference: yup
-      .string()
-      .matches(referenceRules, {
-        message:
-          'It should match upc naming convention',
-      })
-      .required('Required'),
+    productReference: yup.string().matches(referenceRules, {
+      message: 'It should match upc naming convention',
+    }),
     productSellingPrice: yup
       .number()
       .moreThan(0, 'Must be greater than 0')
@@ -74,29 +69,18 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
         return productPurschasePrice
           ? schema.min(productPurschasePrice, 'Must be greater than or equal to purchase price')
           : schema;
-      })
-      .required('Required'),
-    productPurschasePrice: yup.number().moreThan(0, 'Must be greater than 0').required('Required'),
-    productQte: yup.number().moreThan(0, 'Must be greater than 0').required('Required'),
-    categoryId: yup.string().required('Required'),
-    brandId: yup.string().required('Required'),
-    productImages: yup.mixed(),
+      }),
+    productPurschasePrice: yup.number().moreThan(0, 'Must be greater than 0'),
+    productQte: yup.number().moreThan(0, 'Must be greater than 0'),
+    categoryId: yup.string(),
+    brandId: yup.string(),
   });
 
   // open directory to get specific brand logo
-  const handleButtonClick = () => {
-    ImageInput.current.click();
-  };
   const handleButtonClickCode = () => {
     inputRef.current.click();
   };
-  const handleDeleteImage = (index) => {
-    setSelectedImages((prevImages) => {
-      const newImages = Array.from(prevImages);
-      newImages.splice(index, 1);
-      return newImages;
-    });
-  };
+
   const handleInputChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
@@ -120,18 +104,7 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
       );
     }
   };
-  // by selecting new image, we gonna handle changes for preview and selected image to upload
-  const handleImageSelect = (event) => {
-    const files = event.target.files;
-    // for (var file of files) {
-    //   if (file && file.type !== 'image/png') {
-    //     setSelectedImages(null);
-    //     return alert('Please select a valid PNG file');
-    //   }
-    // }
-    setSelectedImages(files);
-    setFieldValue('productImages', files);
-  };
+
   // when use click update brand, we will have the following actions
   const onSubmit = async (values, actions) => {
     // console.log(values);
@@ -140,32 +113,21 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
     onSubmitModal(values);
     onClose();
     setSelectedImages(null);
-    resetForm({
-      values: {
-        productLabel: '',
-        productDescription: '',
-        productReference: '',
-        productSellingPrice: '',
-        productPurschasePrice: '',
-        productQte: '',
-        categoryId: '',
-        brandId: '',
-      },
-    });
+  
   };
   // formik initail values and schema
   const { values, errors, touched, isSubmitting, resetForm, setFieldValue, handleBlur, handleChange, handleSubmit } =
     useFormik({
       initialValues: {
-        productLabel: '',
-        productDescription: '',
-        productReference: '',
-        productSellingPrice: '',
-        productPurschasePrice: '',
-        productQte: '',
-        categoryId: '',
-        brandId: '',
-        productImages: null,
+        _id: row._id,
+        productLabel:row.productLabel,
+        productDescription: row.productDescription,
+        productReference: row.productReference,
+        productSellingPrice: row.productSellingPrice,
+        productPurschasePrice: row.productPurschasePrice,
+        productQte: row.productQte,
+        categoryId: row?.category?._id,
+        brandId: row.brand?._id,
       },
       validationSchema: productSchema,
       onSubmit,
@@ -190,7 +152,18 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
       });
   }, []);
 
+  useEffect(() => {
+    setFieldValue('_id', row._id);
+    setFieldValue('productLabel', row.productLabel);
+    setFieldValue('productDescription', row.productDescription);
+    setFieldValue('productReference', row.productReference);
+    setFieldValue('productSellingPrice', row.productSellingPrice);
+    setFieldValue('productPurschasePrice', row.productPurschasePrice);
+    setFieldValue('productQte', row.productQte);
+    setFieldValue('categoryId', row?.category?._id);
+    setFieldValue('brandId', row?.brand?._id,);
 
+  }, [row]);
   return (
     <Dialog maxWidth="lg" maxHeight={700} open={open}>
       <DialogTitle textAlign="center">Create New Product</DialogTitle>
@@ -215,7 +188,7 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
                   error={Boolean(errors.productLabel) && touched.productLabel}
                   helperText={touched.productLabel && errors.productLabel}
                   multiline
-                  rows={2}
+                  rows={3}
                 />
                 <TextField
                   label="Description"
@@ -226,7 +199,7 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
                   error={Boolean(errors.productDescription) && touched.productDescription}
                   helperText={touched.productDescription && errors.productDescription}
                   multiline
-                  rows={3}
+                  rows={6}
                 />
                 <TextField
                   label="Reference"
@@ -255,84 +228,6 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
                   style={{ display: 'none' }}
                 />
               </Stack>
-              <input
-                style={{ display: 'none' }}
-                accept="image/png"
-                id="productImages"
-                onChange={handleImageSelect}
-                name="productImages"
-                type="file"
-                multiple
-                ref={ImageInput}
-              />
-              <Button fullWidth variant="contained" onClick={handleButtonClick} sx={{ mt: 2 }} color="info">
-                Select Product Images
-              </Button>
-              {errors.productImages && touched.productImages ? (
-                <Alert severity="error"> {touched.productImages && errors.productImages}</Alert>
-              ) : null}
-              {selectedImages ? (
-                <ImageList
-                  sx={{
-                    width: '100%',
-                    height: 'auto',
-                    mt: 2,
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    '& > *': {
-                      width: 'calc(33.3% - 8px)',
-                      marginBottom: '16px',
-                    },
-                    '@media (max-width: 600px)': {
-                      '& > *': {
-                        width: 'calc(50% - 8px)',
-                      },
-                    },
-                    '@media (max-width: 400px)': {
-                      '& > *': {
-                        width: '100%',
-                      },
-                    },
-                  }}
-                  cols={4}
-                  rowHeight={164}
-                >
-                  {Array.from(selectedImages).map((image, index) => (
-                    <ImageListItem key={index}>
-                      <img
-                        width={200}
-                        height={200}
-                        style={{ height: 150 }}
-                        src={URL.createObjectURL(image)}
-                        alt={`Image ${index}`}
-                        onClick={() => handleClickOpen(index)}
-                      />
-                      <IconButton
-                        onClick={() => handleDeleteImage(index)}
-                        sx={{
-                          color: 'red',
-                          backgroundColor: 'white',
-                          position: 'absolute',
-                          buttom: '50%',
-                        }}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </ImageListItem>
-                  ))}
-                </ImageList>
-              ) : null}
-              <Dialog open={openPreview} onClose={handleClose}>
-                <DialogTitle>Logo Preview</DialogTitle>
-                <DialogContent>
-                  <img src={previewImage} style={{ maxWidth: '100%', maxHeight: '100%' }} alt="preview" />
-                  <IconButton style={{ position: 'absolute', top: 10, right: 10 }} onClick={handleClose}>
-                    <Close />
-                  </IconButton>
-                </DialogContent>
-              </Dialog>
             </Grid>
             <Grid item xs={12} sm={4}>
               <Stack
@@ -417,12 +312,10 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
         <DialogActions sx={{ p: '1.25rem' }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button color="secondary" type="submit" variant="contained" disabled={isSubmitting}>
-            Create New Product
+            Create New Brand
           </Button>
         </DialogActions>
- 
       </form>
-   
     </Dialog>
   );
 };

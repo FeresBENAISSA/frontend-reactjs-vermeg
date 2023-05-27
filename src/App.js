@@ -18,7 +18,8 @@ import storage from 'redux-persist/lib/storage'; // defaults to localStorage for
 import { CometChat } from '@cometchat-pro/chat';
 import { APP_ID, REGION } from './Constants';
 import { PersistGate } from 'redux-persist/integration/react';
-
+import { messaging } from './firebase';
+import { getToken } from 'firebase/messaging';
 
   const appSetting = new CometChat.AppSettingsBuilder().subscribePresenceForAllUsers().setRegion(REGION).build();
   CometChat.init(APP_ID, appSetting).then(
@@ -34,9 +35,19 @@ import { PersistGate } from 'redux-persist/integration/react';
 
 
 export default function App() {
-  const [auth, setAuth] = useState('');
-  //  const persistor = persistStore(store);
+  // const [auth, setAuth] = useState('');
+  // //  const persistor = persistStore(store);
+  // const requestPemission = async()=>{
+  //   const permisssion = await  Notification.requestPermission()
+  //   if(permisssion ==='granted'){
+  //     const token = await getToken(messaging,{vapidKey:''})
+  //     console.log("token generated",token)
+  //   }else{ 
+  //     console.log("not granted")   }
+  // }
+  // useEffect(()=>{
 
+  // },[])
   
   return (
     <ThemeProvider>
@@ -45,7 +56,7 @@ export default function App() {
       <Provider store={store}>
         {/* without persist gate */}
         <PersistGate loading={null} persistor={persistor}>
-          <Router />
+          <Router /> 
         </PersistGate>
       </Provider>
     </ThemeProvider>

@@ -21,7 +21,7 @@ import navConfigBank from './configBank';
 import * as Constants from "../../../Constants/constants"
 // ----------------------------------------------------------------------
 
-const NAV_WIDTH = 280;
+const NAV_WIDTH = 310;
 
 const StyledAccount = styled('div')(({ theme }) => ({
   display: 'flex',

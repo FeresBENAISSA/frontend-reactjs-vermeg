@@ -321,6 +321,7 @@ const handleUpdateRow = async (values) => {
     <MaterialReactTable
       columns={columns}
       data={tableData}
+      enableFullScreenToggle={false}
       editingMode="modal"
       enableColumnFilterModes
       enableColumnOrdering
@@ -331,24 +332,24 @@ const handleUpdateRow = async (values) => {
       enableRowSelection
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
-      renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-          }}
-        >
-          <img alt="image" height={150} src={row.original?.productImage} loading="lazy" />
-          <img alt="bank card" height={150} src={row.original?.credit} loading="lazy" />
-          {/* style={{ borderRadius: '50%' }} */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">Signature Catch Phrase: </Typography>
-            <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
-            <img src="./id.jpeg" />
-          </Box>
-        </Box>
-      )}
+      // renderDetailPanel={({ row }) => (
+      //   <Box
+      //     sx={{
+      //       display: 'flex',
+      //       justifyContent: 'space-around',
+      //       alignItems: 'center',
+      //     }}
+      //   >
+      //     <img alt="image" height={150} src={row.original?.productImage} loading="lazy" />
+      //     <img alt="bank card" height={150} src={row.original?.credit} loading="lazy" />
+      //     {/* style={{ borderRadius: '50%' }} */}
+      //     <Box sx={{ textAlign: 'center' }}>
+      //       <Typography variant="h4">Signature Catch Phrase: </Typography>
+      //       <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
+      //       <img src="./id.jpeg" />
+      //     </Box>
+      //   </Box>
+      // )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">
@@ -371,11 +372,11 @@ const handleUpdateRow = async (values) => {
       renderTopToolbarCustomActions={({ table }) => {
         // <Button color="secondary" onClick={() => setCreateModalOpen(true)} variant="contained"></Button>;
 
-        const handleDeleteAll = () => {
-          table.getSelectedRowModel().flatRows.map((row) => {
-            alert('deactivating ' + row.getValue('name'));
-          });
-        };
+        // const handleDeleteAll = () => {
+        //   table.getSelectedRowModel().flatRows.map((row) => {
+        //     alert('deactivating ' + row.getValue('name'));
+        //   });
+        // };
         const handleExportRows = (rows) => {
           csvExporter.generateCsv(rows.map((row) => row.original));
         };
@@ -398,14 +399,14 @@ const handleUpdateRow = async (values) => {
             >
               Export Selected Rows
             </Button>
-            <Button
+            {/* <Button
               color="error"
               disabled={!table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
               onClick={handleDeleteAll}
               variant="contained"
             >
               Delete Selected
-            </Button>
+            </Button> */}
             <UpdateEmployeeModal
               open={updateModalOpen}
               onClose={() => setUpdateModalOpen(false)}

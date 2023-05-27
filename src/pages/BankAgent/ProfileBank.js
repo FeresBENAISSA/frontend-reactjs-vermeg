@@ -9,7 +9,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import {  selectCurrentUser, updateUserAvatar } from '../../redux/features/auth/authSlice';
 import useAxios from '../../api/axios';
 import { USERS_URL } from '../../Constants';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 // ----------------------------------------------------------------------
 
 export default function BankProfile() {
@@ -50,7 +51,14 @@ export default function BankProfile() {
     getCurrentUser();
   }, []);
 
-
+  const handleApiResponse = (response) => {
+    console.log("here")
+    if (response.status === 201) {
+      toast.success("Uploaded successfully");
+    } else {
+      toast.error('Error occured');
+    }
+  };
 
   return (
     <>
@@ -67,15 +75,17 @@ export default function BankProfile() {
           </div>
           <div>
             <Grid container spacing={3}>
-              <Grid xs={12} md={6} lg={4}>
-                <AccountProfile user={user} getCurrentUser={getCurrentUser} setUser={setUser} />
+              <Grid item xs={12} md={6} lg={4}>
+                <AccountProfile user={user} getCurrentUser={getCurrentUser} setUser={setUser} handleApiResponse={handleApiResponse} />
               </Grid>
-              <Grid xs={12} md={6} lg={8}>
+              <Grid item xs={12} md={6} lg={8}>
                 <AccountProfileDetails user={user} updateUser={updateUser} getCurrentUser={getCurrentUser} setUser={setUser}/>
               </Grid>
             </Grid>
           </div>
         </Stack>
+        <ToastContainer position='bottom-right'  />
+
       </Container>
     </>
   )

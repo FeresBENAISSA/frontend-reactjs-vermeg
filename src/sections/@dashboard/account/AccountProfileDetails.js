@@ -8,21 +8,28 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
   const api = useAxios();
   const passwordRules = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,}$/;
   // min 5 characters, 1 upper case letter, 1 lower case letter, 1 numeric digit.
+  const PhoneNumberRules = /^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/;
+  // france phoneNumber
   const userSchema = yup.object().shape({
     firstname: yup.string().required('Required'),
     lastname: yup.string().required('Required'),
-    email: yup.string().required('Required'),
-    // .email('PLease enter a valid email')
     username: yup.string().required('Required'),
+    email: yup.string().email('PLease enter a valid email').required('Required'),
+    // phoneNumber: yup.number().positive().integer().min(5).required('Required'),
+    phoneNumber: yup
+      .string()
+      .matches(PhoneNumberRules, {
+        message: 'Match france number rules :+33(9) or 0033(9) or (10)',
+      })
+      .required(),
     password: yup
       .string()
       .min(5)
       .matches(passwordRules, {
         message:
           'pleace create a strong password \n - At least 5 characters \n - 1 upper case  letter\n - 1 lower case letter \n - 1 numeric digit',
-      }),
-      // .required('Required'),
-    phoneNumber: yup.number().positive().integer().required('Required'),
+      })
+
   });
   const updateUser = async (values) => {
     values._id = user._id;
@@ -49,24 +56,7 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
     validationSchema: userSchema,
     onSubmit,
   });
-  // useEffect(() => {
-  //   console.log(errors);
-  // });
-  // const handleChange = useCallback((event) => {
-  //   setUser((prevState) => ({
-  //     ...prevState,
-  //     [event.target.name]: event.target.value,
-  //   }));
-  // });
 
-  // const handleSubmit = async (event) => {
-  //   event.preventDefault();
-  //   console.log(user);
-  //   try {
-  //     updateUser(user);
-  //     alert('user updated succesfuly');
-  //   } catch (err) {}
-  // };
   if (user)
     return (
       <form autoComplete="off" onSubmit={handleSubmit}>
@@ -75,7 +65,7 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
           <CardContent sx={{ pt: 0, ml: 4 }}>
             <Box sx={{ m: -1.5 }}>
               <Grid container spacing={3}>
-                <Grid xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
+                <Grid item xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
                   <TextField
                     fullWidth
                     label="First name"
@@ -85,10 +75,9 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     onBlur={handleBlur}
                     error={errors.firstname && touched.firstname ? true : false}
                     helperText={errors.firstname}
-                    // required
                   />
                 </Grid>
-                <Grid xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
+                <Grid item xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
                   <TextField
                     fullWidth
                     label="Last name"
@@ -98,10 +87,9 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     onBlur={handleBlur}
                     error={errors.lastname && touched.lastname ? true : false}
                     helperText={errors.lastname}
-                    // required
                   />
                 </Grid>
-                <Grid xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
+                <Grid item xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
                   <TextField
                     fullWidth
                     disabled
@@ -112,10 +100,9 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     onBlur={handleBlur}
                     error={errors.email && touched.email ? true : false}
                     helperText={errors.email}
-                    // required
                   />
                 </Grid>
-                <Grid xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
+                <Grid item  xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
                   <TextField
                     fullWidth
                     label="Username"
@@ -126,10 +113,9 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     type="text"
                     error={errors.username && touched.username ? true : false}
                     helperText={errors.username}
-                    // required
                   />
                 </Grid>
-                <Grid xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
+                <Grid item xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
                   <TextField
                     fullWidth
                     label="Password"
@@ -139,10 +125,9 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     onBlur={handleBlur}
                     error={errors.password && touched.password}
                     helperText={errors.password}
-                    // required
                   />
                 </Grid>
-                <Grid xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
+                <Grid item xs={12} md={6} sx={{ mb: 2, pr: 1 }}>
                   <TextField
                     fullWidth
                     label="Phone Number"
@@ -151,9 +136,8 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     type="number"
-                    error={errors.phoneNumber && touched.phoneNumber}
-                    helperText={errors.phoneNumber}
-                    // required
+                    error={Boolean(errors.phoneNumber) && touched.phoneNumber}
+                    helperText={touched.phoneNumber && errors.phoneNumber}
                   />
                 </Grid>
               </Grid>

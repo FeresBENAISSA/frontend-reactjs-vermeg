@@ -90,7 +90,7 @@ const UserDataTable = () => {
         console.log(userDb);
         console.log(userDb.roles.includes('ADMIN'));
 
-        if (userDb.roles.includes('ADMIN')) {
+        if (userDb.roles.includes('ADMIN')||userDb.roles.includes('STORE_MANAGER')) {
           CometChat.createUser(user, AUTH_KEY).then(
             (user) => {
               console.log('user created', user);
@@ -260,6 +260,7 @@ const UserDataTable = () => {
     <MaterialReactTable
       columns={columns}
       data={tableData}
+      enableFullScreenToggle={false}
       editingMode="modal"
       enableColumnFilterModes
       enableColumnOrdering
@@ -270,24 +271,6 @@ const UserDataTable = () => {
       enableRowSelection
       initialState={{ showColumnFilters: false }}
       positionToolbarAlertBanner="bottom"
-      renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-          }}
-        >
-          <img alt="image" height={150} src={row.original?.productImage} loading="lazy" />
-          <img alt="bank card" height={150} src={row.original?.credit} loading="lazy" />
-          {/* style={{ borderRadius: '50%' }} */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">Signature Catch Phrase: </Typography>
-            <Typography variant="h1">&quot;{row.original.signatureCatchPhrase}&quot;</Typography>
-            <img src="./id.jpeg" />
-          </Box>
-        </Box>
-      )}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement="left" title="Edit">

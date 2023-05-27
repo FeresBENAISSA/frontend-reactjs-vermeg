@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 //MRT Imports
 import MaterialReactTable from 'material-react-table';
@@ -44,7 +45,7 @@ const CreditApplicationDataTable = () => {
   const [modalContent, setModalContent] = useState(null);
   const api = useAxios();
   const user = useSelector(selectCurrentUser);
-  // approuve credit application 
+  // approuve credit application
   const [processing, setProcessing] = useState(false);
 
   // api's
@@ -67,16 +68,16 @@ const CreditApplicationDataTable = () => {
     values.comment = comment;
     try {
       const response = await api.put(`${CREDITS_URL}/waitingforsignature`, values);
-      console.log(response)
+      console.log(response);
       handleApiResponse(response);
       getCredits();
     } catch (error) {
       toast.error('Failed ');
-    }  finally {
+    } finally {
       setProcessing(false);
     }
   };
-  
+
   const updateReject = async (row, comment) => {
     const values = {};
     values.creditId = row.original._id;
@@ -90,6 +91,20 @@ const CreditApplicationDataTable = () => {
       toast.error('Failed ');
     }
   };
+  const postponeApplication = async (row, comment) => {
+    const values = {};
+    values.creditId = row.original._id;
+    values.comment = comment;
+    console.log(values);
+    try {
+      const response = await api.post(`${CREDITS_URL}/postpone`, values);
+      handleApiResponse(response);
+      getCredits();
+    } catch (error) {
+      toast.error('Failed ');
+    }
+  };
+
 
   useEffect(() => {
     getCredits();
@@ -171,6 +186,7 @@ const CreditApplicationDataTable = () => {
         actionText: 'Delay',
         denyText: 'Cancel',
         handleClick: (comment) => {
+          postponeApplication(row, comment)
           console.log(comment);
           setModalContent(null);
         },
@@ -232,34 +248,38 @@ const CreditApplicationDataTable = () => {
       <MaterialReactTable
         columns={columns}
         data={tableData}
+        enableFullScreenToggle={false}
         editingMode="modal"
         enableColumnFilterModes
         enableColumnOrdering
         enableGrouping
         enablePinning
         state={{ showProgressBars: processing }}
-                // onEditingRowSave={handleSaveRowEdits}
+        // onEditingRowSave={handleSaveRowEdits}
         enableRowActions
         enableRowSelection
         initialState={{ showColumnFilters: false }}
         positionToolbarAlertBanner="bottom"
         renderDetailPanel={({ row }) => (
           <>
-            <Grid container spacing={0}>
-              <Grid xs={4}>
-                <ImageList variant="masonry" cols={1} gap={8}>
-                  {row.original.client.legalDocument.map((document) => (
-                    <>
-                      <ImageListItem key={document}>
-                        <LegalFile document={document} />
-                        {/* <ImageListItemBar position="below" title={'item.author'} /> */}
-                      </ImageListItem>
-                    </>
-                  ))}
-                </ImageList>
+            <Grid  container spacing={0}>
+              <Grid  item xs={4}>
+                {row.original.client ? (
+                  <ImageList key ={uuidv4()} variant="masonry" cols={1} gap={8}>
+                    {row.original.client?.legalDocument?.map((document,index) => (
+                      <>
+                        <ImageListItem key={document+uuidv4()}>
+
+                          <LegalFile document={document} />
+                          {/* <ImageListItemBar position="below" title={'item.author'} /> */}
+                        </ImageListItem>
+                      </>
+                    ))}
+                  </ImageList>
+                ) : null}
               </Grid>
-              <Grid xs={1}></Grid>
-              <Grid xs={7}>
+              <Grid key ={uuidv4()} item xs={1}></Grid>
+              <Grid  key ={uuidv4()}item xs={7}>
                 <Information row={row.original} />
               </Grid>
             </Grid>
@@ -267,35 +287,52 @@ const CreditApplicationDataTable = () => {
         )}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Tooltip arrow placement="left" title="Edit">
+            <Tooltip
+              arrow
+              placement="left"
+              title="Edit"
+              disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
+            >
               <IconButton
-                disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
+                // disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
                 color="success"
                 onClick={() => approuveCreditApplication(row)}
-              >
+              > <>
                 <Done />
+                </>
               </IconButton>
             </Tooltip>
-            <Tooltip arrow placement="right" title="Delete">
+            <Tooltip
+              arrow
+              placement="right"
+              title="Delete"
+              disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
+            >
               <IconButton
-                disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
+                // disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
                 color="warning"
                 onClick={() => delayCreditApplication(row)}
-              >
+              ><>
                 <Timer />
+                </>
               </IconButton>
             </Tooltip>
-            <Tooltip arrow placement="right" title="Delete">
+            <Tooltip
+              arrow
+              placement="right"
+              title="Delete"
+              disabled={row.original.state === 'WAITING_FOR_VALIDATION' ? false : true}
+            >
               <IconButton
-                disabled={row.original.state === 'REJECTED' ||row.original.state === 'WAITING_FOR_SIGNATURE' || row.original.state === 'SIGNED'? true : false}
+                // disabled={row.original.state === 'REJECTED' ||row.original.state === 'WAITING_FOR_SIGNATURE' || row.original.state === 'SIGNED'? true : false}
                 color="error"
                 onClick={() => denyCreditApplication(row)}
-              >
+              > <>
                 <Close />
+                </>
               </IconButton>
             </Tooltip>
             {/* {processing && <CircularProgress />} */}
-
           </Box>
         )}
         // renderTopToolbarCustomActions={({ table }) => {

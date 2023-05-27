@@ -47,6 +47,7 @@ export default function LoginForm() {
       setFcmToken(token);
       console.log('notif token', token);
     } else if (permission === 'denied') {
+      console.log("denied")
     }
   };
   useEffect(() => {

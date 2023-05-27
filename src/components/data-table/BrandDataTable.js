@@ -35,7 +35,7 @@ const BrandDataTable = () => {
       const response = await api.get(`${BRANDS_URL}/store/${user.store}`);
       if (!response?.data) throw Error('no data found');
       const brands = response.data;
-      console.log(brands);
+      // console.log(brands);
       setData(brands);
     } catch (error) {
       console.log(error);
@@ -63,7 +63,7 @@ const BrandDataTable = () => {
   const createBrand = async (values) => {
     try {
       const response = await api.post(BRANDS_URL, values);
-      console.log(response);
+      // console.log(response);
       handleApiResponse(response);
     } catch (error) {
       toast.error('Failed');
@@ -89,17 +89,17 @@ const BrandDataTable = () => {
   };
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     values.storeId = user.store;
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
     // formData.append('storeId', user.store);
-    console.log(formData);
+    // console.log(formData);
     await createBrand(formData);
     getBrands();
   };
   const handleUpdateRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     // console.log(values);
     values.storeId = user.store;
     const formData = new FormData();

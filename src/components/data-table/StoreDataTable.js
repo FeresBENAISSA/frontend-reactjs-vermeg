@@ -51,7 +51,7 @@ const StoreDataTable = () => {
       const response = await api.get(STORES_URL);
       if (!response?.data) throw Error('no data found');
       const stores = response.data;
-      console.log(stores);
+      // console.log(stores);
       setData(stores);
     } catch (error) {
       console.log(error);
@@ -92,7 +92,7 @@ const StoreDataTable = () => {
   }, [data]);
 
   const handleApiResponse = (response) => {
-    console.log(response);
+    // console.log(response);
     if (response.status === 201 || response.status === 200) {
       toast.success('operation successfully completed');
     } else {
@@ -101,21 +101,21 @@ const StoreDataTable = () => {
   };
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    // console.log(values);
 
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
-    console.log(formData);
+    // console.log(formData);
     await createStore(formData);
     getStores();
     // alert(' success ');
   };
   const handleUpdateRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     const formData = new FormData();
 
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
-    console.log(formData);
+    // console.log(formData);
     await updateStore(formData);
     getStores();
   };
@@ -123,10 +123,10 @@ const StoreDataTable = () => {
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
       const roles = [];
-      console.log(values);
+      // console.log(values);
       tableData[row.index] = values;
       //roles from string to table
-      console.log(tableData[row.index].roles);
+      // console.log(tableData[row.index].roles);
       //send/receive api updates here, then refetch or update local table data for re-render
       await updateStore(tableData[row.index]);
       setTableData([...tableData]);
@@ -168,7 +168,7 @@ const StoreDataTable = () => {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
-          console.log(event);
+          // console.log(event);
           const isValid = cell.column.id === 'username' ? validateRequired(event.target.value) : true;
           if (!isValid) {
             //set validation error for cell if invalid
@@ -445,7 +445,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     //put your validation logic here
-    console.log(values);
+    // console.log(values);
     // createProduct(values,token);
     try {
       // const response = await addProduct(values).unwrap();
@@ -497,7 +497,7 @@ export const CreateNewUserModal = ({ open, columns, onClose, onSubmit }) => {
                 name="companyId"
                 label="Company"
                 onChange={(e) => {
-                  console.log(e.target);
+                  // console.log(e.target);
                   setValues({ ...values, [e.target.name]: e.target.value });
                 }}
               >

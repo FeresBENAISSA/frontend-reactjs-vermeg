@@ -21,12 +21,12 @@ export default function AdminProfile() {
 
   const getCurrentUser = async () => {
     const response = await api.get(`/api/users/current`);
-    console.log(response.data.user);
+    // console.log(response.data.user);
     setUser(response.data.user);
     dispatch(updateUserAvatar(response.data.user.avatar));
   };
   const handleApiResponse = (response) => {
-    console.log("here")
+    // console.log("here")
     if (response.status === 201) {
       toast.success("Uploaded successfully");
     } else {
@@ -62,7 +62,7 @@ export default function AdminProfile() {
                 <AccountProfile item user={user} getCurrentUser={getCurrentUser} setUser={setUser}  handleApiResponse={handleApiResponse}/>
               </Grid>
               <Grid xs={12} md={6} lg={8}>
-                <AccountProfileDetails item user={user}  updateUser={updateUser} getCurrentUser={getCurrentUser} setUser={setUser}/>
+                <AccountProfileDetails item user={user}  updateUser={updateUser} getCurrentUser={getCurrentUser} setUser={setUser} handleApiResponse={handleApiResponse}/>
               </Grid>
             </Grid>
           </div>

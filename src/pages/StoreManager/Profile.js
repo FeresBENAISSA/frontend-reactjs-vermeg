@@ -24,7 +24,7 @@ export default function ManagerProfile() {
 
   const getCurrentUser = async () => {
     const response = await api.get(`/api/users/current`);
-    console.log(response.data.user);
+    // console.log(response.data.user);
     setUser(response.data.user);
     dispatch(updateUserAvatar(response.data.user.avatar));
   };
@@ -47,7 +47,7 @@ export default function ManagerProfile() {
     getCurrentUser();
   }, []);
   const handleApiResponse = (response) => {
-    console.log("here")
+    // console.log("here")
     if (response.status === 201) {
       toast.success("Uploaded successfully");
     } else {
@@ -75,7 +75,7 @@ export default function ManagerProfile() {
                 <AccountProfile user={user} getCurrentUser={getCurrentUser} setUser={setUser} handleApiResponse={handleApiResponse}/>
               </Grid>
               <Grid item xs={12} md={6} lg={8}>
-                <AccountProfileDetails user={user} updateUser={updateUser} getCurrentUser={getCurrentUser} setUser={setUser}/>
+                <AccountProfileDetails user={user} updateUser={updateUser} getCurrentUser={getCurrentUser} setUser={setUser} handleApiResponse={handleApiResponse}/>
               </Grid>
             </Grid>
           </div>

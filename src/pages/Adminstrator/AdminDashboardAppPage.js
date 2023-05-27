@@ -57,7 +57,7 @@ export default function AdminDashboardAppPage() {
   const getCreditGroupedByState = async () => {
     const response = await api(`${STATS_URL}/state-count`);
     if (response.data[0]) setStatusCount(response.data[0]);
-    console.log(response.data[0]);
+    // console.log(response.data[0]);
   };
 
   const getTopCompanies = async () => {

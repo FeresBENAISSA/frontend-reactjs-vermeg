@@ -55,8 +55,8 @@ export const UpdateBrandModal = ({ open, row, onClose, onSubmitModal }) => {
   };
   // when use click update brand, we will have the following actions
   const onSubmit = async (values, actions) => {
-    console.log(values);
-    console.log(actions);
+    // console.log(values);
+    // console.log(actions);
     onSubmitModal(values);
     onClose();
     setSelectedImage(null);

@@ -54,7 +54,7 @@ const CreditApplicationDataTable = () => {
       const response = await api.get(`${CREDITS_URL}/bank`);
       if (!response?.data) throw Error('no data found');
       const credits = response.data;
-      console.log(credits);
+      // console.log(credits);
       setData(credits);
     } catch (error) {
       console.log(error);
@@ -68,7 +68,7 @@ const CreditApplicationDataTable = () => {
     values.comment = comment;
     try {
       const response = await api.put(`${CREDITS_URL}/waitingforsignature`, values);
-      console.log(response);
+      // console.log(response);
       handleApiResponse(response);
       getCredits();
     } catch (error) {
@@ -82,7 +82,7 @@ const CreditApplicationDataTable = () => {
     const values = {};
     values.creditId = row.original._id;
     values.comment = comment;
-    console.log(values);
+    // console.log(values);
     try {
       const response = await api.put(`${CREDITS_URL}/rejected`, values);
       handleApiResponse(response);
@@ -95,7 +95,7 @@ const CreditApplicationDataTable = () => {
     const values = {};
     values.creditId = row.original._id;
     values.comment = comment;
-    console.log(values);
+    // console.log(values);
     try {
       const response = await api.post(`${CREDITS_URL}/postpone`, values);
       handleApiResponse(response);
@@ -134,7 +134,7 @@ const CreditApplicationDataTable = () => {
         actionText: 'Approve',
         denyText: 'Cancel',
         handleClick: (comment) => {
-          console.log(comment);
+          // console.log(comment);
           updateApprouve(row, comment);
           setModalContent(null);
         },
@@ -187,7 +187,7 @@ const CreditApplicationDataTable = () => {
         denyText: 'Cancel',
         handleClick: (comment) => {
           postponeApplication(row, comment)
-          console.log(comment);
+          // console.log(comment);
           setModalContent(null);
         },
 

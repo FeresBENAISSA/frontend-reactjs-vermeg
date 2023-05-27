@@ -166,7 +166,7 @@ export const UpdateProductModal = ({ open, row, onClose, onSubmitModal }) => {
   }, [row]);
   return (
     <Dialog maxWidth="lg" maxHeight={700} open={open}>
-      <DialogTitle textAlign="center">Create New Product</DialogTitle>
+      <DialogTitle textAlign="center">Update Product</DialogTitle>
       <form autoComplete="off" onSubmit={handleSubmit}>
         <DialogContent>
           {/* style={{ width: '800px', height: '450px' }} */}
@@ -312,7 +312,7 @@ export const UpdateProductModal = ({ open, row, onClose, onSubmitModal }) => {
         <DialogActions sx={{ p: '1.25rem' }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button color="secondary" type="submit" variant="contained" disabled={isSubmitting}>
-            Create New Brand
+          Update Product
           </Button>
         </DialogActions>
       </form>

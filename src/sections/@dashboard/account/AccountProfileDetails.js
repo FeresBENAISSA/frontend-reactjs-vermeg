@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import useAxios from '../../../api/axios';
 import { USERS_URL } from '../../../Constants';
 import * as yup from 'yup';
-export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
+export const AccountProfileDetails = ({ getCurrentUser, user, handleApiResponse }) => {
   const api = useAxios();
   const passwordRules = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,}$/;
   // min 5 characters, 1 upper case letter, 1 lower case letter, 1 numeric digit.
@@ -20,8 +20,7 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
       .string()
       .matches(PhoneNumberRules, {
         message: 'Match france number rules :+33(9) or 0033(9) or (10)',
-      })
-      .required(),
+      }),
     password: yup
       .string()
       .min(5)
@@ -34,14 +33,19 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
   const updateUser = async (values) => {
     values._id = user._id;
     const response = await api.put(USERS_URL, values);
+    // console.log(response)
+    if (response.status === 201) {
+      handleApiResponse(response);
+    }
     await getCurrentUser();
-    console.log(response);
+    // console.log(response);
   };
   const onSubmit = async (values, actions) => {
-    console.log(values);
-    console.log(actions);
+    // console.log(values);
+    // console.log(actions);
     await updateUser(values);
-    alert('user updated ');
+   
+    // alert('user updated ');
     // actions.resetForm();
   };
   const { values, errors, touched, isSubmitting, handleBlur, handleChange, handleSubmit } = useFormik({
@@ -135,7 +139,7 @@ export const AccountProfileDetails = ({ getCurrentUser, user, setUser }) => {
                     value={values.phoneNumber}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    type="number"
+                    type="text"
                     error={Boolean(errors.phoneNumber) && touched.phoneNumber}
                     helperText={touched.phoneNumber && errors.phoneNumber}
                   />

@@ -41,7 +41,7 @@ const CategoryDataTable = () => {
       const response = await api.get(`${CATEGORY_URL}/store/${user.store}`);
       if (!response?.data) throw Error('no data found');
       const categories = response.data;
-      console.log(categories);
+      // console.log(categories);
       setData(categories);
     } catch (error) {
       console.log(error);
@@ -83,7 +83,7 @@ const CategoryDataTable = () => {
   }, [data]);
 
   const handleApiResponse = (response) => {
-    console.log(response);
+    // console.log(response);
     if (response.status === 201 || response.status === 200) {
       toast.success('operation successfully completed');
     } else {
@@ -92,13 +92,13 @@ const CategoryDataTable = () => {
   };
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     values.storeId = user.store;
     await createCategory(values);
     getCategories();
   };
   const handleUpdateRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     values.storeId = user.store;
     await updateCategory(values);
     getCategories();

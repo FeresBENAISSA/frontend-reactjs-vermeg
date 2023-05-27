@@ -10,7 +10,7 @@ export default function StoreEmployeePage() {
   return (
     <>
       <Helmet>
-        <title> Employees</title>
+        <title> Employees </title>
       </Helmet>
 
       <Container>

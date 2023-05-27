@@ -50,7 +50,7 @@ const UserDataTable = () => {
       const response = await api.get(USERS_URL);
       if (!response?.data) throw Error('no data found');
       const users = response.data;
-      console.log(users);
+      // console.log(users);
       setData(users);
     } catch (error) {
       console.log(error);
@@ -68,7 +68,7 @@ const UserDataTable = () => {
   };
   const updateUser = async (values) => {
     try {
-      console.log(values)
+      // console.log(values)
       const response = await api.put(USERS_URL, values);
       handleApiResponse(response);
     } catch (error) {
@@ -87,8 +87,8 @@ const UserDataTable = () => {
         var user = new CometChat.User(UID);
         user.setName(name);
         if (avatar) user.setAvatar(avatar);
-        console.log(userDb);
-        console.log(userDb.roles.includes('ADMIN'));
+        // console.log(userDb);
+        // console.log(userDb.roles.includes('ADMIN'));
 
         if (userDb.roles.includes('ADMIN')||userDb.roles.includes('STORE_MANAGER')) {
           CometChat.createUser(user, AUTH_KEY).then(
@@ -118,7 +118,7 @@ const UserDataTable = () => {
   }, [data]);
 
   const handleApiResponse = (response) => {
-    console.log(response);
+    // console.log(response);
     if (response.status === 201 || response.status === 200) {
       toast.success('operation successfully completed');
     } else {
@@ -127,10 +127,10 @@ const UserDataTable = () => {
   };
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
-    console.log(formData);
+    // console.log(formData);
     await createUser(formData);
     getUsers();
   };

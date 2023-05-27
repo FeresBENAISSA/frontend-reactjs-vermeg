@@ -54,7 +54,7 @@ const CompanyDataTable = () => {
       const response = await api.get(COMPANIES_URL);
       if (!response?.data) throw Error('no data found');
       const companies = response.data;
-      console.log(companies);
+      // console.log(companies);
       setData(companies);
     } catch (error) {
       console.log(error);
@@ -97,7 +97,7 @@ const CompanyDataTable = () => {
   // toast notification functions
   const handleApiResponse = (response) => {
     if (response.status === 201 || response.status === 200) {
-      console.log(response.data);
+      // console.log(response.data);
       toast.success('operation successfully completed');
     } else {
       toast.error('Error occured');
@@ -105,7 +105,7 @@ const CompanyDataTable = () => {
   };
 
   const handleCreateNewRow = async (values) => {
-    console.log(values);
+    // console.log(values);
 
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
@@ -115,10 +115,10 @@ const CompanyDataTable = () => {
     // alert(' success ');
   };
   const handleUpdateRow = async (values) => {
-    console.log(values);
+    // console.log(values);
     const formData = new FormData();
     Object.keys(values).forEach((key) => formData.append(key, values[key]));
-    console.log(formData);
+    // console.log(formData);
     await updateCompany(formData);
     getCompanies();
     // alert(' success ');
@@ -127,10 +127,10 @@ const CompanyDataTable = () => {
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
       const roles = [];
-      console.log(values);
+      // console.log(values);
       tableData[row.index] = values;
       //roles from string to table
-      console.log(tableData[row.index].roles);
+      // console.log(tableData[row.index].roles);
       //send/receive api updates here, then refetch or update local table data for re-render
       await updateCompany(tableData[row.index]);
       setTableData([...tableData]);
@@ -173,7 +173,7 @@ const CompanyDataTable = () => {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
-          console.log(event);
+          // console.log(event);
           const isValid = cell.column.id === 'username' ? validateRequired(event.target.value) : true;
           if (!isValid) {
             //set validation error for cell if invalid

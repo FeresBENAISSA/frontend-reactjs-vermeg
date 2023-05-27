@@ -39,8 +39,8 @@ export const UpdateCategoryModal = ({ open, row, onClose, onSubmitModal }) => {
   });
   // when use click update brand, we will have the following actions
   const onSubmit = async (values, actions) => {
-    console.log(values);
-    console.log(actions);
+    // console.log(values);
+    // console.log(actions);
     // this function use the on Sumbit of the modal that will save new brand
     onSubmitModal(values);
     onClose();
@@ -67,7 +67,7 @@ export const UpdateCategoryModal = ({ open, row, onClose, onSubmitModal }) => {
       }, [row]);
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Category</DialogTitle>
+      <DialogTitle textAlign="center">Update Category</DialogTitle>
       <form autoComplete="off" onSubmit={handleSubmit}>
         <DialogContent>
           <Stack
@@ -152,7 +152,7 @@ export const UpdateCategoryModal = ({ open, row, onClose, onSubmitModal }) => {
         <DialogActions sx={{ p: '1.25rem' }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button color="secondary" onClick={(e) => handleSubmit(e)} variant="contained">
-            Create New Category
+            Update Category
           </Button>
         </DialogActions>
       </form>

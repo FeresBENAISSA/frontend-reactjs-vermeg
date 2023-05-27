@@ -87,7 +87,7 @@ export default function NotificationsPopover() {
 
   const getNotifications = async () => {
     const notifications = await api.get('api/notifications/bank');
-    console.log(notifications.data);
+    // console.log(notifications.data);
     // const total = countUnreadNotifications(notifications.data);
     // setTotalUnRead(total);
     setNotifications(notifications.data);

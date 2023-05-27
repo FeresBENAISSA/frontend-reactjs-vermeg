@@ -35,7 +35,7 @@ export default function BankDashboardAppPage() {
   const getBankStatsCount = async () => {
     const response = await api.get(`${STATS_URL}/bank`);
     setBankStats(response.data);
-    console.log(response.data);
+    // console.log(response.data);
   };
 
   const creditCountBySex = async () => {

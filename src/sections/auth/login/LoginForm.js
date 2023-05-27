@@ -45,7 +45,7 @@ export default function LoginForm() {
       //GenerateTokon
       const token = await getToken(messaging);
       setFcmToken(token);
-      console.log('notif token', token);
+      // console.log('notif token', token);
     } else if (permission === 'denied') {
       console.log("denied")
     }
@@ -59,13 +59,13 @@ export default function LoginForm() {
       const email = values.email;
       const password = values.password;
       const userData = await login({ email, password, fcmToken }).unwrap();
-      console.log(userData);
+      // console.log(userData);
       const roles = userData.roles;
 
-      console.log(email, password);
+      // console.log(email, password);
       dispatch(setCredentials({ ...userData, email }));
       const UID = userData.user._id;
-      console.log(userData);
+      // console.log(userData);
       CometChat.getLoggedinUser().then(
         (user) => {
           if (!user) {
@@ -86,16 +86,16 @@ export default function LoginForm() {
       setEmail('');
       setPassword('');
       if (roles.includes('BANK_AGENT')) {
-        console.log('bank');
+        // console.log('bank');
         navigate('/dashboard/bank', { replace: true });
       } else if (roles.includes('ADMIN')) {
         navigate('/dashboard/admin', { replace: true });
       } else if (roles.includes('STORE_MANAGER')) {
         navigate('/dashboard/manager', { replace: true });
       } else {
-        console.log('non');
+        console.log('error redecting to page');
       }
-      console.log('here');
+      // console.log('here');
     } catch (error) {
       console.log(error);
       if (!error.originalStatus) {
@@ -121,8 +121,8 @@ export default function LoginForm() {
   };
 
   const onSubmit = async (values, actions) => {
-    console.log(values);
-    console.log(actions);
+    // console.log(values);
+    // console.log(actions);
     await handleClick(values);
   };
 

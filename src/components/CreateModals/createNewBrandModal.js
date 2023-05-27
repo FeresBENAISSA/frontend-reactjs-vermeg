@@ -53,8 +53,8 @@ export const CreateNewBrandModal = ({ open, columns, onClose, onSubmitModal }) =
   };
   // when use click update brand, we will have the following actions
   const onSubmit = async (values, actions) => {
-    console.log(values);
-    console.log(actions);
+    // console.log(values);
+    // console.log(actions);
     // this function use the on Sumbit of the modal that will save new brand
     onSubmitModal(values);
     onClose();

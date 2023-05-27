@@ -82,12 +82,6 @@ export const CreateNewEmployeeModal = ({ open, columns, onClose, onSubmitModal }
       })
       .required(),
     avatar: yup.mixed().required('Required'),
-    // roles: yup.string().required('Required'),
-    // storeId: yup.string().when('roles', {
-    //   is: (value) => value === 'STORE_MANAGER',
-    //   then: yup.string().required('Field 2 is required when Field 1 is specificValue'),
-    //   otherwise: yup.string().required("test").nullable(),
-    // }),
   });
   // open directory to get specific brand logo
   const handleButtonClick = () => {
@@ -209,20 +203,6 @@ export const CreateNewEmployeeModal = ({ open, columns, onClose, onSubmitModal }
               error={Boolean(errors.phoneNumber) && touched.phoneNumber}
               helperText={touched.phoneNumber && errors.phoneNumber}
             />
-            {/* <FormControl fullWidth error={Boolean(errors.lastname) && touched.lastname}>
-              <InputLabel id="roles">Roles</InputLabel>
-              <Select
-                labelId="roles"
-                id="roles"
-                name="roles"
-                label="Roles"
-                value={values.roles}
-                onChange={handleChange}
-                onBlur={handleBlur}
-              >
-                <MenuItem selected value={STORE_EMPLOYEE}>Store Employee</MenuItem>
-              </Select>
-            </FormControl> */}
             <TextField
               label="password"
               name="password"

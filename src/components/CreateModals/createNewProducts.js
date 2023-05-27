@@ -51,10 +51,10 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
     setPreviewImage(null);
     setOpenPreview(false);
   };
-  
+
   const [companies, setCompanies] = useState([]);
   const [brand, setBrand] = useState([]);
- 
+
   // yup brand schema, form should respect the followin schema
   const referenceRules = /^\d{12}$/;
   const productSchema = yup.object().shape({
@@ -63,8 +63,7 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
     productReference: yup
       .string()
       .matches(referenceRules, {
-        message:
-          'It should match upc naming convention',
+        message: 'It should match upc naming convention',
       })
       .required('Required'),
     productSellingPrice: yup
@@ -123,12 +122,12 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
   // by selecting new image, we gonna handle changes for preview and selected image to upload
   const handleImageSelect = (event) => {
     const files = event.target.files;
-    // for (var file of files) {
-    //   if (file && file.type !== 'image/png') {
-    //     setSelectedImages(null);
-    //     return alert('Please select a valid PNG file');
-    //   }
-    // }
+    const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
+    if (imageFiles.length !== files.length) {
+      setSelectedImages(null);
+      return alert('Please select a valid Image file');
+    }
+
     setSelectedImages(files);
     setFieldValue('productImages', files);
   };
@@ -189,7 +188,6 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
         console.error(error);
       });
   }, []);
-
 
   return (
     <Dialog maxWidth="lg" maxHeight={700} open={open}>
@@ -420,9 +418,7 @@ export const CreateNewProductModal = ({ open, columns, onClose, onSubmitModal })
             Create New Product
           </Button>
         </DialogActions>
- 
       </form>
-   
     </Dialog>
   );
 };
